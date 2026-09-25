@@ -1,0 +1,19 @@
+{% load i18n %}
+{% load currency_filters %}
+{% load purchase_info_tags %}
+
+{% if product.description %}
+    <p class="product-description">
+        {{ product.description|striptags|truncatewords:20 }}
+    </p>
+{% endif %}
+
+{% if product.is_parent %}
+{% else %}
+    {% purchase_info_for_product request product as session %}
+    {% if session.price.exists %}
+        <p class="price">
+            {{ session.price.incl_tax|currency:session.price.currency }}
+        </p>
+    {% endif %}
+{% endif %}

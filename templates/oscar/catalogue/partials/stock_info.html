@@ -1,0 +1,45 @@
+{# DEBUG: USING CUSTOM stock_info.html #}
+{% load i18n %}
+
+<div style="background: red; color: white; padding: 8px; text-align: center;">
+    DEBUG: custom _stock_info.html is being used
+</div>
+
+{% if product.is_parent and product.children.exists %}
+    <h3>{% trans "Available T-tshirts" %}</h3>
+
+    <label for="variant-select"><strong>Select a colour &amp; size:</strong></label>
+    <select id="variant-select" class="form-control">
+        <option value="">-- choose a t-shirt variant --</option>
+
+        {% for child in product.children.all %}
+            {% with sr=child.stockrecords.all.0 %}
+                {% if sr %}
+                    <option data-url="{{ child.get_absolute_url }}">
+                        {{ child.title }} — {{ sr.price_currency }}{{ sr.price }}
+                    </option>
+                {% else %}
+                    <option disabled>
+                        {{ child.title }} — {% trans "No stock" %}
+                    </option>
+                {% endif %}
+            {% endwith %}
+        {% endfor %}
+    </select>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            var s = document.getElementById("variant-select");
+            if (!s) return;
+            s.addEventListener("change", function () {
+                var opt = s.options[s.selectedIndex];
+                if (opt && opt.dataset.url) {
+                    window.location = opt.dataset.url;
+                }
+            });
+        });
+    </script>
+
+{% else %}
+    {% include "oscar/catalogue/partials/_stock_record.html" %}
+{% endif %}

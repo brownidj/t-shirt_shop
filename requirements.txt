@@ -1,0 +1,30 @@
+# Core framework
+Django>=5.2,<6.0
+
+# Oscar e-commerce framework
+django-oscar==4.1
+
+# Oscar dependencies (installed automatically but explicit is safer)
+django-extra-views>=0.14.0
+# Oscar 4.1's Category manager is compatible with the 4.x treebeard API.
+# Treebeard 5+ validates managers differently and fails Django's system checks.
+django-treebeard>=4.7,<5.0
+django-phonenumber-field>=7.0
+django-phonenumbers>=1.0
+
+# Search (Haystack + Whoosh)
+django-haystack>=3.2
+whoosh>=2.7
+
+# Images
+Pillow>=10.0
+
+# Parsing / utilities
+python-dateutil>=2.8
+pytz>=2024.1
+
+# Optional, ONLY if you want PostgreSQL later
+# psycopg2-binary>=2.9
+
+# For local dev scripts
+ipython>=8.0

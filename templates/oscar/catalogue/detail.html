@@ -1,0 +1,665 @@
+{% extends "oscar/catalogue/detail.html" %}
+
+{% load i18n %}
+{% load currency_filters %}
+{% load purchase_info_tags %}
+{% load static %}
+
+{# Cart controls live in the Browse store navigation line on catalogue pages. #}
+{% block mini_basket %}{% endblock %}
+
+{% block extrastyles %}
+    {{ block.super }}
+    <style>
+        /* Match the home-page Topository wordmark in the catalogue header. */
+        .header .h1 > a {
+            display: block;
+            width: min(29.5rem, 100%);
+            flex: 0 0 min(29.5rem, 100%);
+            aspect-ratio: 472 / 157;
+            background: url('/media/images/logo/green_topository_logo_Futura_t.png') left center / contain no-repeat;
+            overflow: hidden;
+            text-indent: -9999px;
+            white-space: nowrap;
+        }
+
+        #style-options .style-option:hover:not(.active) {
+            background-color: #000000;
+            border-color: #000000;
+            color: #ffffff;
+        }
+
+        .artwork-image-trigger {
+            display: block;
+            width: 100%;
+            padding: 0;
+            border: 0;
+            background: transparent;
+            cursor: zoom-in;
+        }
+
+        .artwork-lightbox {
+            position: fixed;
+            inset: 0;
+            z-index: 1050;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            background: rgba(0, 0, 0, .82);
+        }
+
+        .artwork-lightbox__content {
+            position: relative;
+            width: min(98vw, 2400px);
+            max-height: 96vh;
+        }
+
+        .artwork-lightbox__image {
+            display: block;
+            width: 100%;
+            max-height: 96vh;
+            object-fit: contain;
+        }
+
+        .artwork-lightbox__close {
+            position: absolute;
+            top: .5rem;
+            right: .5rem;
+            width: 2.5rem;
+            height: 2.5rem;
+            border: 0;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, .72);
+            color: #fff;
+            font-size: 1.75rem;
+            line-height: 1;
+        }
+
+        #colour-swatches .colour-swatch.active {
+            outline: 3px solid #212529;
+            outline-offset: 2px;
+            box-shadow: 0 0 0 5px #ffffff;
+            position: relative;
+            z-index: 1;
+        }
+
+        #size-options .size-option.active {
+            background-color: #495057;
+            border-color: #495057;
+            box-shadow: 0 0 0 2px #212529;
+            color: #ffffff;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-md-5 mb-3">
+            {% if product.primary_image %}
+                <button type="button" class="artwork-image-trigger" data-artwork-lightbox-open
+                        aria-label="{% trans 'View a larger version of this artwork' %}">
+                    <img src="{{ product.primary_image.original.url }}"
+                         alt="{{ product.get_title }}"
+                         class="img-fluid">
+                </button>
+            {% endif %}
+
+            {# Variant details panel lives under the design image #}
+            {% if product.product_class.name == "Designs" %}
+                <div id="variant-panel" class="card mt-3 d-none">
+                    <div class="card-body">
+                        <h3 id="variant-panel-title" class="h5 mb-2"></h3>
+                        <p id="variant-panel-price" class="h5 mb-2"></p>
+                        <p id="variant-panel-meta" class="mb-2"></p>
+                        <img id="variant-panel-image" class="img-fluid" alt="">
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+            <div class="col-md-7">
+                <h1>{{ product.get_title }}</h1>
+
+                {% if product.description and product.product_class.name != "Designs" %}
+                    <div class="mb-3">
+                        {{ product.description|safe }}
+                    </div>
+                {% endif %}
+
+            {% if product.product_class.name == "Designs" %}
+
+                    <h2 class="h4 mt-2">{% trans "Choose your T-shirt" %}</h2>
+
+                    <div class="mb-3">
+                        <h3 class="h5 mb-2">{% trans "Style" %}</h3>
+                        <div id="style-options" class="d-flex flex-wrap gap-2">
+                            {# Style buttons will be populated by JS #}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="mb-2" style="display: flex; align-items: baseline;">
+                            <h3 class="h5 mb-0">{% trans "Colour" %}</h3>
+                            <span id="style-colour-warning" class="ms-auto small text-danger d-none"
+                                  style="margin-left: auto; margin-right: 25px; font-weight: 700; text-align: right;" role="alert"></span>
+                        </div>
+                        <div id="colour-swatches" class="d-flex flex-wrap gap-2">
+                            {# Swatches will be populated by JS #}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <h3 class="h5 mb-2">{% trans "Size" %}</h3>
+                        <div id="size-options" class="d-flex flex-wrap gap-2">
+                            {# Size radios will be populated by JS #}
+                        </div>
+                    </div>
+
+                    <p id="variant-status" class="mt-2 text-muted small"></p>
+                    <form id="tshirt-add-form" method="post" action="{% url 'configured_tshirt_add' product.id %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="style" id="selected-style">
+                        <input type="hidden" name="colour" id="selected-colour">
+                        <input type="hidden" name="size" id="selected-size">
+                        <button id="add-to-cart" type="submit" class="btn btn-primary" disabled>
+                            {% trans "Add to cart" %}
+                        </button>
+                    </form>
+
+        {# ====================================== #}
+                    {# Embed variant data as JSON for the JS to use #}
+                    <script id="variant-data" type="application/json">
+                        {"styles":[{"code":"AS-5001","name":"Men's Staple Tee"},{"code":"AS-4001","name":"Women's Staple Tee"},{"code":"AS-3005","name":"Kid's Staple Tee"}],"style_prices":{"AS-5001":"A$55.00","AS-4001":"A$50.00","AS-3005":"A$45.00"},"style_colours":{"AS-5001":["Aqua","Arctic Blue","Army","Asphalt Marle","Atlantic","Autumn","Berry","Black","Bone","Bright Royal","Bubblegum","Burgundy","Butter","Camel","Cardinal","Carolina Blue","Charcoal","Charity Pink","Charlotte","Chestnut","Citrus","Clay","Coal","Cobalt","Cocoa","Copper","Coral","Cypress","Dark Chocolate","Ecru","Eucalyptus","Fire","Fog Blue","Forest Green","Forest Marle","Forest Marle - 567C","Gold","Granite","Grey Marle","Hydro","Indigo","Jade","Kelly Green","Khaki","Kiwi","Lapis","Lemon","Lemonade","Light Grey","Lime","Mauve","Midnight Blue","Mineral","Moss","Mushroom","Mustard","Natural","Navy","Orange","Orchid","Pale Blue","Pale Pink","Petrol Blue","Pine Green","Pink","Pistachio","Plum","Powder","Purple","Red","Rose","Safari","Sage","Sand","Seafoam","Shadow","Slate Blue","Smoke","Sunset","Tan","Teal","Topaz","Walnut","White","Yellow"],"AS-4001":["Army","Asphalt Marle","Atlantic","Autumn","Berry","Black","Bone","Bright Royal","Bubblegum","Burgundy","Butter","Camel","Cardinal","Carolina Blue","Charcoal","Charity Pink","Chestnut","Clay","Coal","Cobalt","Copper","Coral","Ecru","Eucalyptus","Fire","Forest Green","Fuchsia","Grey Marle","Hydro","Indigo","Jade","Lavender","Lime","Mauve","Midnight Blue","Mineral","Mushroom","Mustard","Natural","Navy","Orange","Orchid","Pale Blue","Pale Pink","Petrol Blue","Pine Green","Pink","Pistachio","Plum","Powder","Purple","Red","Rose","Sage","Sand","Seafoam","Tan","Walnut","White","Yellow"],"AS-3005":["Army","Black","Bone","Bright Royal","Burgundy","Carolina Blue","Charcoal","Charity Pink","Cobalt","Ecru","Forest Green","Gold","Grey Marle","Kelly Green","Navy","Orange","Petrol Blue","Pink","Purple","Red","Sage","Walnut","White"]},"sizes":["XS","S","M","L","XL","2XL","3XL","4XL"],"variants":[]}
+                    </script>
+
+                    {# Logic #}
+                    {# Logic #}
+                    <script>
+                        window.addEventListener("load", function () {
+                            var dataScript = document.getElementById("variant-data");
+                            if (!dataScript) return;
+
+                            var raw = dataScript.textContent || dataScript.innerText || "[]";
+                            var variants = [];
+                            try {
+                                var configuration = JSON.parse(raw);
+                                variants = configuration.variants || [];
+                                var stylePrices = configuration.style_prices || {};
+                                configuration.style_sizes = {
+                                    "AS-3005": ["2", "4", "6"]
+                                };
+                            } catch (e) {
+                                console.error("Failed to parse variant JSON", e);
+                                return;
+                            }
+
+                            var styleContainer  = document.getElementById("style-options");
+                            var colourContainer = document.getElementById("colour-swatches");
+                            var sizeContainer   = document.getElementById("size-options");
+                            var status          = document.getElementById("variant-status");
+                            var colourWarning   = document.getElementById("style-colour-warning");
+                            var addToCartButton = document.getElementById("add-to-cart");
+                            var selectedStyleInput = document.getElementById("selected-style");
+                            var selectedColourInput = document.getElementById("selected-colour");
+                            var selectedSizeInput = document.getElementById("selected-size");
+
+                            // New: panel elements
+                            var panel       = document.getElementById("variant-panel");
+                            var panelTitle  = document.getElementById("variant-panel-title");
+                            var panelPrice  = document.getElementById("variant-panel-price");
+                            var panelMeta   = document.getElementById("variant-panel-meta");
+                            var panelImg    = document.getElementById("variant-panel-image");
+
+                            {#function updateVariantPanel(v) {#}
+                            {#    if (!panel) return;#}
+                            {##}
+                            {#    if (!v) {#}
+                            {#        panel.classList.add("d-none");#}
+                            {#        return;#}
+                            {#    }#}
+                            {##}
+                            {#    // Text bits#}
+                            {#    panelTitle.textContent = v.title || "";#}
+                            {#    panelPrice.textContent = v.price || "";#}
+                            {#    panelMeta.textContent = [#}
+                            {#        v.style_name || v.style_code || "",#}
+                            {#        v.colour || "",#}
+                            {#        v.size || ""#}
+                            {#    ].filter(Boolean).join(" / ");#}
+                            {##}
+                            {#    // --- build image filename from STYLE + COLOUR ONLY ---#}
+                            {#    var styleCode = (v.style_code || "").trim();    // e.g. "AS-5001"#}
+                            {#    var colourSlug = (v.colour || "")#}
+                            {#        .trim()#}
+                            {#        .toLowerCase()#}
+                            {#        .replace(/\s+/g, "_");                      // "Autumn" → "autumn"#}
+                            {##}
+                            {#    if (styleCode && colourSlug) {#}
+                            {#        // assuming files live in: static/topository/tshirts/AS-5001/t-shirt_AS-5001_autumn.png#}
+                            {#        var basePath = "{% static 'topository/tshirts/' %}";#}
+                            {#        var filename = "t-shirt_" + styleCode + "_" + colourSlug + ".png";#}
+                            {#        var url = basePath + styleCode + "/" + filename;#}
+                            {##}
+                            {#        panelImg.src = url;#}
+                            {#        panelImg.alt = v.title + " – " + v.colour;#}
+                            {#        panelImg.classList.remove("d-none");#}
+                            {#    } else {#}
+                            {#        panelImg.removeAttribute("src");#}
+                            {#        panelImg.classList.add("d-none");#}
+                            {#    }#}
+                            {##}
+                            {#    panel.classList.remove("d-none");#}
+                            {# }#}
+
+                            // expects a <div id="tshirt-variant-panel"> with child elements
+                            // #variant-title, #variant-price, #variant-meta, #variant-image
+                            function updateVariantPanel(v) {
+                                var panel = document.getElementById("variant-panel");
+                                var imgEl = document.getElementById("variant-panel-image");
+
+                                if (!panel || !imgEl) {
+                                    return;
+                                }
+
+                                // Nothing selected / no matching variant → hide the card
+                                if (!v) {
+                                    panel.classList.add("d-none");
+                                    imgEl.removeAttribute("src");
+                                    imgEl.alt = "";
+                                    return;
+                                }
+
+                                // Show the card
+                                panel.classList.remove("d-none");
+
+                                // The preview is rendered from the selected options.  A database
+                                // child variant is not needed until a shopper actually buys it.
+                                if (v.style_code && v.colour) {
+                                    imgEl.src = "{% url 'tshirt_preview' product.id %}?style=" +
+                                        encodeURIComponent(v.style_code) + "&colour=" +
+                                        encodeURIComponent(v.colour);
+                                    imgEl.alt = v.title || "T-shirt preview";
+                                } else {
+                                    imgEl.removeAttribute("src");
+                                    imgEl.alt = "";
+                                }
+                            }
+
+
+                            if (!colourContainer || !sizeContainer || !status || !panel) {
+                                return;
+                            }
+
+                            // Collect unique styles, colours, sizes
+                            var stylesMap = {};  // style_code -> style_name
+                            var colours   = [];
+                            var sizes     = (configuration.sizes || []).slice();
+
+                            (configuration.styles || []).forEach(function (style) {
+                                stylesMap[style.code] = style.name || style.code;
+                            });
+
+                            variants.forEach(function (v) {
+                                // styles
+                                if (v.style_code) {
+                                    if (!stylesMap[v.style_code]) {
+                                        stylesMap[v.style_code] = v.style_name || v.style_code;
+                                    }
+                                }
+                                // colours
+                                if (v.colour && colours.indexOf(v.colour) === -1) {
+                                    colours.push(v.colour);
+                                }
+                                // sizes
+                                if (v.size && sizes.indexOf(v.size) === -1) {
+                                    sizes.push(v.size);
+                                }
+                            });
+
+                            // Turn stylesMap into a sorted list [{code, name}, …]
+                            var styles = Object.keys(stylesMap).map(function (code) {
+                                return {
+                                    code: code,
+                                    name: stylesMap[code]
+                                };
+                            });
+                            // Sort colours alphabetically by display name (pretty names)
+                            colours.sort(function (a, b) {
+                                return a.localeCompare(b, undefined, { sensitivity: "base" });
+                            });
+
+                            // Keep sizes in ascending order (XS…4XL).
+
+                            var selectedStyle  = "AS-5001";
+                            var defaultColour  = "Burgundy";
+                            var selectedColour = defaultColour;
+                            var selectedSize   = "M";
+                            var colourMap      = {};  // name -> hex, loaded from JSON
+
+                            function availableColours() {
+                                return (configuration.style_colours &&
+                                    configuration.style_colours[selectedStyle]) || colours;
+                            }
+
+                            function availableSizes() {
+                                return (configuration.style_sizes &&
+                                    configuration.style_sizes[selectedStyle]) || sizes;
+                            }
+
+                            function clearColourWarning() {
+                                if (!colourWarning) return;
+                                colourWarning.textContent = "";
+                                colourWarning.classList.add("d-none");
+                            }
+
+
+                            // --------- RENDER STYLES -----------------
+                            function renderStyles() {
+                                if (!styleContainer) return;
+
+                                styleContainer.innerHTML = "";
+
+                                styles.forEach(function (s) {
+                                    var btn = document.createElement("button");
+                                    btn.type = "button";
+                                    btn.className = "btn btn-sm btn-outline-secondary me-2 mb-2 style-option";
+                                    btn.textContent = s.name || s.code;
+                                    btn.setAttribute("data-style-code", s.code);
+
+                                    btn.addEventListener("click", function () {
+                                        var previousColour = selectedColour;
+                                        selectedStyle = s.code;
+
+                                        // visual selection state
+                                        styleContainer.querySelectorAll(".style-option").forEach(function (el) {
+                                            el.classList.remove("active");
+                                        });
+                                        btn.classList.add("active");
+                                        if (previousColour && availableColours().indexOf(previousColour) === -1) {
+                                            selectedColour = availableColours().indexOf(defaultColour) !== -1
+                                                ? defaultColour
+                                                : availableColours()[0] || "";
+                                            if (colourWarning) {
+                                                colourWarning.textContent = previousColour +
+                                                    " is not available for this style. Please choose another colour.";
+                                                colourWarning.classList.remove("d-none");
+                                            }
+                                        } else {
+                                            clearColourWarning();
+                                        }
+                                        if (availableSizes().indexOf(selectedSize) === -1) {
+                                            selectedSize = availableSizes()[0] || "";
+                                        }
+                                        renderColours();
+                                        renderSizes();
+                                        updateStatusAndPanel();
+                                    });
+
+                                    styleContainer.appendChild(btn);
+
+                                    if (s.code === selectedStyle) {
+                                        btn.classList.add("active");
+                                    }
+                                });
+                            }
+
+                            // --------- RENDER COLOURS ----------------
+                            function renderColours() {
+                                colourContainer.innerHTML = "";
+
+                                availableColours().forEach(function (colour) {
+                                    var swatch = document.createElement("button");
+                                    swatch.type = "button";
+                                    swatch.className = "btn btn-sm btn-outline-secondary me-2 mb-2 colour-swatch";
+                                    swatch.setAttribute("data-colour", colour);
+
+                                    swatch.title = colour;
+                                    swatch.setAttribute("aria-label", colour);
+
+                                    swatch.textContent = "";
+                                    swatch.style.width = "3rem";
+                                    swatch.style.height = "3rem";
+                                    swatch.style.padding = "2px";
+                                    swatch.style.borderRadius = "0.25rem";
+
+                                    var rawKey = colour.trim();
+                                    var lookupKey = rawKey.toLowerCase().replace(/\s+/g, "_");
+                                    var hex = colourMap[lookupKey] || colourMap[rawKey] || colourMap[rawKey.toLowerCase()] || null;
+
+                                    if (hex) {
+                                        swatch.style.backgroundColor = hex;
+                                        swatch.style.border = "1px solid #ccc";
+                                        try {
+                                            var r = parseInt(hex.substr(1, 2), 16);
+                                            var g = parseInt(hex.substr(3, 2), 16);
+                                            var b = parseInt(hex.substr(5, 2), 16);
+                                            var luminance = 0.299 * r + 0.587 * g + 0.114 * b;
+                                            swatch.style.color = luminance < 140 ? "#ffffff" : "#000000";
+                                        } catch (e) {
+                                            swatch.style.color = "#000000";
+                                        }
+                                    }
+
+                                    swatch.addEventListener("click", function () {
+                                        selectedColour = colour;
+                                        clearColourWarning();
+
+                                        colourContainer.querySelectorAll(".colour-swatch").forEach(function (el) {
+                                            el.classList.remove("active");
+                                            el.setAttribute("aria-pressed", "false");
+                                        });
+                                        swatch.classList.add("active");
+                                        swatch.setAttribute("aria-pressed", "true");
+
+                                        updateStatusAndPanel();
+                                    });
+
+                                    colourContainer.appendChild(swatch);
+
+                                    if (colour === selectedColour) {
+                                        swatch.classList.add("active");
+                                        swatch.setAttribute("aria-pressed", "true");
+                                    }
+                                });
+                            }
+
+                            // --------- RENDER SIZES ------------------
+                            function renderSizes() {
+                                sizeContainer.innerHTML = "";
+
+                                availableSizes().forEach(function (size) {
+                                    var wrapper = document.createElement("label");
+                                    wrapper.className = "btn btn-sm btn-outline-secondary me-2 mb-2 size-option";
+
+                                    var input = document.createElement("input");
+                                    input.type = "radio";
+                                    input.name = "tshirt-size";
+                                    input.value = size;
+                                    input.autocomplete = "off";
+                                    input.className = "me-1";
+
+                                    if (size === selectedSize) {
+                                        input.checked = true;
+                                        wrapper.classList.add("active");
+                                    }
+
+                                    input.addEventListener("change", function () {
+                                        if (input.checked) {
+                                            selectedSize = size;
+                                            sizeContainer.querySelectorAll(".size-option").forEach(function (el) {
+                                                el.classList.remove("active");
+                                            });
+                                            wrapper.classList.add("active");
+                                            updateStatusAndPanel();
+                                        }
+                                    });
+
+                                    wrapper.appendChild(input);
+                                    wrapper.appendChild(document.createTextNode(size));
+                                    sizeContainer.appendChild(wrapper);
+                                });
+                            }
+
+                            // --------- Find matching variant ----------
+                            function findMatchingVariant() {
+                                var needStyle = styles.length > 0;
+                                if (needStyle && !selectedStyle) {
+                                    return null;
+                                }
+                                if (!selectedColour || !selectedSize) {
+                                    return null;
+                                }
+                                for (var i = 0; i < variants.length; i++) {
+                                    var v = variants[i];
+
+                                    var styleOk = true;
+                                    if (styles.length) {
+                                        styleOk = !!v.style_code && v.style_code === selectedStyle;
+                                    }
+
+                                    if (styleOk &&
+                                        v.colour === selectedColour &&
+                                        v.size === selectedSize &&
+                                        v.available) {
+                                        return v;
+                                    }
+                                }
+                                // Configurable designs create a SKU only when it is needed;
+                                // every configured colour/size combination is therefore valid.
+                                if (!variants.length) {
+                                    return {
+                                        style_code: selectedStyle,
+                                        colour: selectedColour,
+                                        size: selectedSize,
+                                        available: true,
+                                        price: stylePrices[selectedStyle] || ""
+                                    };
+                                }
+                                return null;
+                            }
+
+                            // --------- Update status + panel ----------
+                            function updateStatusAndPanel() {
+                                var v = findMatchingVariant();
+                                var needStyle = styles.length > 0;
+
+                                // Not enough info selected yet
+                                if ((needStyle && !selectedStyle) || !selectedColour || !selectedSize) {
+                                    status.textContent = "";
+                                    updateVariantPanel(null);   // hide the panel
+                                    addToCartButton.disabled = true;
+                                    return;
+                                }
+
+                                if (v) {
+                                    status.textContent = v.price
+                                        ? "Selected: " + v.style_code + " / " + v.colour + " / " + v.size + " — " + v.price
+                                        : "Selected: " + v.style_code + " / " + v.colour + " / " + v.size;
+
+                                    // Show the preview card (image only)
+                                    updateVariantPanel(v);
+                                    selectedStyleInput.value = v.style_code;
+                                    selectedColourInput.value = v.colour;
+                                    selectedSizeInput.value = v.size;
+                                    addToCartButton.disabled = false;
+                                } else {
+                                    status.textContent = "That combination is not available.";
+                                    updateVariantPanel(null);
+                                    addToCartButton.disabled = true;
+                                }
+                            }
+
+
+
+                            function initUI() {
+                                renderStyles();
+                                renderColours();
+                                renderSizes();
+                                updateStatusAndPanel();
+                            }
+
+                            // Load colour map, then init
+                            fetch("{% static 'topository/colours_parsed.json' %}")
+                                .then(function (response) {
+                                    if (!response.ok) {
+                                        throw new Error("HTTP " + response.status);
+                                    }
+                                    return response.json();
+                                })
+                                .then(function (json) {
+                                    colourMap = json || {};
+                                    if (!colours.length) {
+                                        colours = Object.keys(colourMap).map(function (key) {
+                                            return key.replace(/_/g, " ").replace(/\b\w/g, function (letter) {
+                                                return letter.toUpperCase();
+                                            });
+                                        });
+                                    }
+                                    initUI();
+                                })
+                                .catch(function (err) {
+                                    console.warn("Could not load colour map JSON:", err);
+                                    colourMap = {};
+                                    initUI();
+                                });
+                        });
+                    </script>
+
+                {% else %}
+
+                    {% purchase_info_for_product request product as session %}
+                    {% if session.price.exists %}
+                        <p class="h4">
+                            {{ session.price.incl_tax|currency:session.price.currency }}
+                        </p>
+                    {% endif %}
+
+                    {# TODO later: add Oscar add-to-basket form here #}
+                    {# {% include "oscar/catalogue/partials/add_to_basket_form.html" %} #}
+
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% if product.primary_image %}
+        <div id="artwork-lightbox" class="artwork-lightbox d-none" role="dialog" aria-modal="true"
+             aria-label="{% trans 'Larger artwork image' %}">
+            <div class="artwork-lightbox__content">
+                <button type="button" class="artwork-lightbox__close" data-artwork-lightbox-close
+                        aria-label="{% trans 'Close larger image' %}">&times;</button>
+                <img class="artwork-lightbox__image" src="{{ product.primary_image.original.url }}"
+                     alt="{{ product.get_title }}">
+            </div>
+        </div>
+    {% endif %}
+{% endblock %}
+
+{% block onbodyload %}
+    {{ block.super }}
+    (function () {
+        var lightbox = document.getElementById("artwork-lightbox");
+        var openButton = document.querySelector("[data-artwork-lightbox-open]");
+        var closeButton = document.querySelector("[data-artwork-lightbox-close]");
+        if (!lightbox || !openButton || !closeButton) return;
+
+        function closeLightbox() {
+            lightbox.classList.add("d-none");
+            openButton.focus();
+        }
+
+        openButton.addEventListener("click", function () {
+            lightbox.classList.remove("d-none");
+            closeButton.focus();
+        });
+        closeButton.addEventListener("click", closeLightbox);
+        lightbox.addEventListener("click", function (event) {
+            if (event.target === lightbox) closeLightbox();
+        });
+        document.addEventListener("keydown", function (event) {
+            if (event.key === "Escape" && !lightbox.classList.contains("d-none")) {
+                closeLightbox();
+            }
+        });
+    }());
+{% endblock %}
