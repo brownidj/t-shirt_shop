@@ -1,0 +1,33 @@
+<style>
+    /* Shared header geometry — matched to the home-page wordmark and strapline. */
+    .header.container { padding-left: 1rem; padding-right: 1rem; }
+    .header .page_inner { padding-top: 0; padding-bottom: 1rem; }
+    .header .page_inner .row { align-items: center; }
+    .header .h1 {
+        display: flex;
+        flex: 0 0 100%;
+        max-width: 100%;
+        align-items: center;
+        margin-bottom: 0;
+    }
+    .header .h1 > a {
+        display: block;
+        width: min(29.5rem, 100%);
+        flex: 0 0 min(29.5rem, 100%);
+        aspect-ratio: 472 / 157;
+        background: url('/media/images/logo/green_topository_logo_Futura_t.png') left center / contain no-repeat;
+        overflow: hidden;
+        text-indent: -9999px;
+        white-space: nowrap;
+        transform: translate(-39px, 20px);
+    }
+    .header .h1 > small {
+        margin: 0 0 0 auto;
+        text-align: right;
+        transform: translateY(20px);
+    }
+</style>
+<div class="col-sm-6 h1">
+    <a href="{{ homepage_url }}">{% block brand_title %}{{ shop_name }}{% endblock %}</a>
+    <small>{{ shop_tagline }}</small>
+</div>

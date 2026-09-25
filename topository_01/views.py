@@ -13,6 +13,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 from oscar.apps.catalogue.models import (
     AttributeOption,
+    AttributeOptionGroup,
     Product,
     ProductAttribute,
     ProductAttributeValue,
@@ -350,37 +351,46 @@ def add_configured_tshirt(request, product_id):
             design.save(update_fields=["structure"])
 
         sku = f"{design.upc}-{style_code}-{colour.replace(' ', '-')}-{size}"
-        child, created = Product.objects.get_or_create(
-            parent=design,
-            upc=sku,
-            defaults={
-                "title": f"{design.title} – {style_code} – {colour} – {size}",
-                "structure": Product.CHILD,
-                "product_class": style.product_class,
-            },
+        attributes = {
+            attribute.code: attribute
+            for attribute in ProductAttribute.objects.filter(
+                product_class=style.product_class,
+                code__in={"tshirt_style", "colour", "size"},
+            )
+        }
+
+        def option_for(group_name, value):
+            group = get_object_or_404(AttributeOptionGroup, name=group_name)
+            option, _ = AttributeOption.objects.get_or_create(
+                group=group, option=value
+            )
+            return option
+
+        options = {
+            "tshirt_style": option_for("T-shirt Style", style_code),
+            "colour": option_for("T-shirt Colours", colour),
+            "size": option_for("T-shirt Sizes", size),
+        }
+
+        matching_children = Product.objects.filter(
+            parent=design, product_class=style.product_class
         )
+        for code, option in options.items():
+            matching_children = matching_children.filter(
+                attribute_values__attribute=attributes[code],
+                attribute_values__value_option=option,
+            )
+        child = matching_children.first()
+        created = child is None
         if created:
-            attributes = {
-                attribute.code: attribute
-                for attribute in ProductAttribute.objects.filter(
-                    product_class=style.product_class,
-                    code__in={"tshirt_style", "colour", "size"},
-                )
-            }
-            style_option = get_object_or_404(
-                AttributeOption, group__name="T-shirt Style", option=style_code
+            child = Product.objects.create(
+                parent=design,
+                upc=sku,
+                title=f"{design.title} – {style_code} – {colour} – {size}",
+                structure=Product.CHILD,
+                product_class=style.product_class,
             )
-            colour_option = get_object_or_404(
-                AttributeOption, group__name="T-shirt Colours", option=colour
-            )
-            size_option = get_object_or_404(
-                AttributeOption, group__name="T-shirt Sizes", option=size
-            )
-            for code, option in {
-                "tshirt_style": style_option,
-                "colour": colour_option,
-                "size": size_option,
-            }.items():
+            for code, option in options.items():
                 ProductAttributeValue.objects.create(
                     product=child, attribute=attributes[code], value_option=option
                 )

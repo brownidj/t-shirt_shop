@@ -1,0 +1,70 @@
+{% load currency_filters %}
+{% load category_tags %}
+{% load i18n %}
+
+<nav class="{% block nav_classes %}navbar navbar-expand-lg navbar-dark bg-dark{% endblock %}">
+    {% block navbar_toggler %}
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+    {% endblock %}
+
+    {% block navbar_basket %}
+        <a class="btn btn-secondary float-right btn-cart ml-auto d-inline-block d-md-none" href="{% url 'basket:summary' %}">
+            <i class="fas fa-shopping-cart"></i>
+            {% trans "Cart" %}
+            {% if not request.basket.is_empty %}
+                {% if request.basket.is_tax_known %}
+                    {% blocktrans with total=request.basket.total_incl_tax|currency:request.basket.currency %}Total: {{ total }}{% endblocktrans %}
+                {% else %}
+                    {% blocktrans with total=request.basket.total_excl_tax|currency:request.basket.currency %}Total: {{ total }}{% endblocktrans %}
+                {% endif %}
+            {% endif %}
+        </a>
+    {% endblock %}
+
+    {% block navbar_collapse %}
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            {% block nav %}
+                <ul class="navbar-nav mr-auto">
+                    {% block nav_items %}
+                        <li class="nav-item dropdown d-flex align-items-center">
+                            <a class="nav-link" href="{% url 'catalogue:index' %}">
+                                {% block browse_store_text %}{% trans "Browse store" %}{% endblock %}
+                            </a>
+                            <button class="nav-link dropdown-toggle border-0 bg-transparent" type="button" id="navbarDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" aria-label="{% trans 'Open store categories' %}">
+                                <span class="sr-only">{% trans "Open store categories" %}</span>
+                            </button>
+                            <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                                {% category_tree depth=1 as tree_categories %}
+                                {% if tree_categories %}
+                                    {% for tree_category in tree_categories %}
+                                        <a class="dropdown-item" href="{{ tree_category.get_absolute_url }}">{{ tree_category.name }}</a>
+                                    {% endfor %}
+                                    <div class="dropdown-divider"></div>
+                                {% endif %}
+                                {% block nav_dropdown_extra_items %}
+                                    <a class="dropdown-item" href="{% url 'offer:list' %}">{% trans "Offers" %}</a>
+                                {% endblock %}
+                            </div>
+                        </li>
+                    {% endblock %}
+                </ul>
+            {% endblock %}
+
+            {% block nav_extra %}
+                <div class="navbar-nav flex-row align-items-center my-2 my-lg-0">
+                    <span class="nav-link mr-2">
+                        <strong>{% trans "Cart total:" %}</strong>
+                        {% if request.basket.is_tax_known %}
+                            {{ request.basket.total_incl_tax|currency:request.basket.currency }}
+                        {% else %}
+                            {{ request.basket.total_excl_tax|currency:request.basket.currency }}
+                        {% endif %}
+                    </span>
+                    <a class="nav-link" href="{% url 'basket:summary' %}">{% trans "View cart" %}</a>
+                </div>
+            {% endblock %}
+        </div>
+    {% endblock %}
+</nav>
