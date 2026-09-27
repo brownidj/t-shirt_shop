@@ -11,6 +11,7 @@ django-extra-views>=0.14.0
 django-treebeard>=4.7,<5.0
 django-phonenumber-field>=7.0
 django-phonenumbers>=1.0
+sorl-thumbnail>=12.11
 
 # Search (Haystack + Whoosh)
 django-haystack>=3.2

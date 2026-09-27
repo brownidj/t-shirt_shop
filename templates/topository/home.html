@@ -27,7 +27,8 @@
 {% block content %}
     {% if slides %}
         <section class="artwork-slideshow" aria-label="Featured artwork">
-            <img class="slideshow-logo" src="/media/images/logo/red_topository_logo_Futura_inverted.png" alt="Topository">
+            <h1 class="slideshow-title">Custom Designs for T-shirts</h1>
+            <img class="slideshow-logo" src="/media/images/logo/green_topository_logo_Futura_inverted.png" alt="Topository">
             {% for slide in slides %}
                 <figure class="artwork-slide{% if forloop.first %} is-active{% endif %}">
                     <a class="artwork-slide-link" href="{{ slide.product_url }}" aria-label="View {{ slide.alt }}">
@@ -62,7 +63,7 @@
             width: min(29.5rem, 100%);
             flex: 0 0 min(29.5rem, 100%);
             aspect-ratio: 472 / 157;
-            background: url('/media/images/logo/green_topository_logo_Futura_t.png') left center / contain no-repeat;
+            background: url('/media/images/logo/red_topository_logo_Futura_t 4cm.png') left center / contain no-repeat;
             overflow: hidden;
             text-indent: -9999px;
             white-space: nowrap;
@@ -70,6 +71,18 @@
         }
         .header .h1 > small { margin: 0 0 0 auto; text-align: right; transform: translateY(20px); }
         .artwork-slideshow { position: relative; min-height: 70vh; background: #111; overflow: hidden; }
+        .slideshow-title {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            z-index: 2;
+            margin: 0;
+            color: #fff;
+            font-family: Avenir, sans-serif;
+            font-size: 36pt;
+            font-weight: 400;
+            line-height: 1.1;
+        }
         .slideshow-logo { position: absolute; bottom: 1rem; right: 1rem; z-index: 2; width: min(12rem, 25%); height: auto; }
         .artwork-slide { display: none; margin: 0; height: 70vh; align-items: center; justify-content: center; }
         .artwork-slide.is-active { display: flex; }

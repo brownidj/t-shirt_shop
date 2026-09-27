@@ -4,9 +4,39 @@
 {% load currency_filters %}
 {% load purchase_info_tags %}
 {% load static %}
+{% load catalogue_navigation_tags %}
 
 {# Cart controls live in the Browse store navigation line on catalogue pages. #}
 {% block mini_basket %}{% endblock %}
+
+{% block breadcrumbs %}
+    {% design_navigation as design_navigation %}
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ homepage_url }}">{% trans "Home" %}</a></li>
+            {% with category=product.get_categories.first %}
+                {% for category_ancestor in category.get_ancestors_and_self %}
+                    <li class="breadcrumb-item"><a href="{{ category_ancestor.get_absolute_url }}">{{ category_ancestor.name }}</a></li>
+                {% endfor %}
+            {% endwith %}
+            <li class="breadcrumb-item active" aria-current="page">{{ product.get_title }}</li>
+            {% if design_navigation.category %}
+                <li class="ml-auto d-flex align-items-center design-navigation" aria-label="{% trans 'Design navigation' %}">
+                    {% if design_navigation.previous %}
+                        <a href="{{ design_navigation.previous.get_absolute_url }}" aria-label="{% trans 'Previous design' %}" title="{% trans 'Previous design' %}">&laquo;</a>
+                    {% else %}
+                        <span class="design-navigation__disabled" aria-hidden="true">&laquo;</span>
+                    {% endif %}
+                    {% if design_navigation.next %}
+                        <a href="{{ design_navigation.next.get_absolute_url }}" aria-label="{% trans 'Next design' %}" title="{% trans 'Next design' %}">&raquo;</a>
+                    {% else %}
+                        <span class="design-navigation__disabled" aria-hidden="true">&raquo;</span>
+                    {% endif %}
+                </li>
+            {% endif %}
+        </ol>
+    </nav>
+{% endblock breadcrumbs %}
 
 {% block extrastyles %}
     {{ block.super }}
@@ -17,11 +47,15 @@
             width: min(29.5rem, 100%);
             flex: 0 0 min(29.5rem, 100%);
             aspect-ratio: 472 / 157;
-            background: url('/media/images/logo/green_topository_logo_Futura_t.png') left center / contain no-repeat;
+            background: url('/media/images/logo/red_topository_logo_Futura_t 4cm.png') left center / contain no-repeat;
             overflow: hidden;
             text-indent: -9999px;
             white-space: nowrap;
         }
+
+        .design-navigation { gap: .75rem; font-size: 1.8rem; line-height: 1; }
+        .design-navigation a { text-decoration: none; }
+        .design-navigation__disabled { color: #adb5bd; }
 
         #style-options .style-option:hover:not(.active) {
             background-color: #000000;
@@ -51,7 +85,7 @@
 
         .artwork-lightbox__content {
             position: relative;
-            width: min(98vw, 2400px);
+            width: min(80vw, 2400px);
             max-height: 96vh;
         }
 
@@ -170,7 +204,7 @@
         {# ====================================== #}
                     {# Embed variant data as JSON for the JS to use #}
                     <script id="variant-data" type="application/json">
-                        {"styles":[{"code":"AS-5001","name":"Men's Staple Tee"},{"code":"AS-4001","name":"Women's Staple Tee"},{"code":"AS-3005","name":"Kid's Staple Tee"}],"style_prices":{"AS-5001":"A$55.00","AS-4001":"A$50.00","AS-3005":"A$45.00"},"style_colours":{"AS-5001":["Aqua","Arctic Blue","Army","Asphalt Marle","Atlantic","Autumn","Berry","Black","Bone","Bright Royal","Bubblegum","Burgundy","Butter","Camel","Cardinal","Carolina Blue","Charcoal","Charity Pink","Charlotte","Chestnut","Citrus","Clay","Coal","Cobalt","Cocoa","Copper","Coral","Cypress","Dark Chocolate","Ecru","Eucalyptus","Fire","Fog Blue","Forest Green","Forest Marle","Forest Marle - 567C","Gold","Granite","Grey Marle","Hydro","Indigo","Jade","Kelly Green","Khaki","Kiwi","Lapis","Lemon","Lemonade","Light Grey","Lime","Mauve","Midnight Blue","Mineral","Moss","Mushroom","Mustard","Natural","Navy","Orange","Orchid","Pale Blue","Pale Pink","Petrol Blue","Pine Green","Pink","Pistachio","Plum","Powder","Purple","Red","Rose","Safari","Sage","Sand","Seafoam","Shadow","Slate Blue","Smoke","Sunset","Tan","Teal","Topaz","Walnut","White","Yellow"],"AS-4001":["Army","Asphalt Marle","Atlantic","Autumn","Berry","Black","Bone","Bright Royal","Bubblegum","Burgundy","Butter","Camel","Cardinal","Carolina Blue","Charcoal","Charity Pink","Chestnut","Clay","Coal","Cobalt","Copper","Coral","Ecru","Eucalyptus","Fire","Forest Green","Fuchsia","Grey Marle","Hydro","Indigo","Jade","Lavender","Lime","Mauve","Midnight Blue","Mineral","Mushroom","Mustard","Natural","Navy","Orange","Orchid","Pale Blue","Pale Pink","Petrol Blue","Pine Green","Pink","Pistachio","Plum","Powder","Purple","Red","Rose","Sage","Sand","Seafoam","Tan","Walnut","White","Yellow"],"AS-3005":["Army","Black","Bone","Bright Royal","Burgundy","Carolina Blue","Charcoal","Charity Pink","Cobalt","Ecru","Forest Green","Gold","Grey Marle","Kelly Green","Navy","Orange","Petrol Blue","Pink","Purple","Red","Sage","Walnut","White"]},"sizes":["XS","S","M","L","XL","2XL","3XL","4XL"],"variants":[]}
+                        {"styles":[{"code":"AS-5001","name":"Men's Tee"},{"code":"AS-4001","name":"Women's Tee"},{"code":"AS-3005","name":"Kid's Tee"}],"style_prices":{"AS-5001":"A$55.00","AS-4001":"A$50.00","AS-3005":"A$45.00"},"style_colours":{"AS-5001":["Aqua","Arctic Blue","Army","Asphalt Marle","Atlantic","Autumn","Berry","Black","Bone","Bright Royal","Bubblegum","Burgundy","Butter","Camel","Cardinal","Carolina Blue","Charcoal","Charity Pink","Charlotte","Chestnut","Citrus","Clay","Coal","Cobalt","Cocoa","Copper","Coral","Cypress","Dark Chocolate","Ecru","Eucalyptus","Fire","Fog Blue","Forest Green","Forest Marle","Forest Marle - 567C","Gold","Granite","Grey Marle","Hydro","Indigo","Jade","Kelly Green","Khaki","Kiwi","Lapis","Lemon","Lemonade","Light Grey","Lime","Mauve","Midnight Blue","Mineral","Moss","Mushroom","Mustard","Natural","Navy","Orange","Orchid","Pale Blue","Pale Pink","Petrol Blue","Pine Green","Pink","Pistachio","Plum","Powder","Purple","Red","Rose","Safari","Sage","Sand","Seafoam","Shadow","Slate Blue","Smoke","Sunset","Tan","Teal","Topaz","Walnut","White","Yellow"],"AS-4001":["Army","Asphalt Marle","Atlantic","Autumn","Berry","Black","Bone","Bright Royal","Bubblegum","Burgundy","Butter","Camel","Cardinal","Carolina Blue","Charcoal","Charity Pink","Chestnut","Clay","Coal","Cobalt","Copper","Coral","Ecru","Eucalyptus","Fire","Forest Green","Fuchsia","Grey Marle","Hydro","Indigo","Jade","Lavender","Lime","Mauve","Midnight Blue","Mineral","Mushroom","Mustard","Natural","Navy","Orange","Orchid","Pale Blue","Pale Pink","Petrol Blue","Pine Green","Pink","Pistachio","Plum","Powder","Purple","Red","Rose","Sage","Sand","Seafoam","Tan","Walnut","White","Yellow"],"AS-3005":["Army","Black","Bone","Bright Royal","Burgundy","Carolina Blue","Charcoal","Charity Pink","Cobalt","Ecru","Forest Green","Gold","Grey Marle","Kelly Green","Navy","Orange","Petrol Blue","Pink","Purple","Red","Sage","Walnut","White"]},"sizes":["XS","S","M","L","XL","2XL","3XL","4XL"],"variants":[]}
                     </script>
 
                     {# Logic #}
@@ -641,7 +675,8 @@
         var lightbox = document.getElementById("artwork-lightbox");
         var openButton = document.querySelector("[data-artwork-lightbox-open]");
         var closeButton = document.querySelector("[data-artwork-lightbox-close]");
-        if (!lightbox || !openButton || !closeButton) return;
+        var lightboxImage = document.querySelector(".artwork-lightbox__image");
+        if (!lightbox || !openButton || !closeButton || !lightboxImage) return;
 
         function closeLightbox() {
             lightbox.classList.add("d-none");
@@ -653,6 +688,7 @@
             closeButton.focus();
         });
         closeButton.addEventListener("click", closeLightbox);
+        lightboxImage.addEventListener("click", closeLightbox);
         lightbox.addEventListener("click", function (event) {
             if (event.target === lightbox) closeLightbox();
         });

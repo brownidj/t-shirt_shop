@@ -33,7 +33,7 @@
             width: min(29.5rem, 100%);
             flex: 0 0 min(29.5rem, 100%);
             aspect-ratio: 472 / 157;
-            background: url('/media/images/logo/green_topository_logo_Futura_t.png') left center / contain no-repeat;
+            background: url('/media/images/logo/red_topository_logo_Futura_t 4cm.png') left center / contain no-repeat;
             overflow: hidden;
             text-indent: -9999px;
             white-space: nowrap;
@@ -54,7 +54,7 @@
 {% block column_left %}
     {% category_tree as tree_categories %}
     {% if tree_categories %}
-        <h4>{% trans "Show results for" %}</h4>
+        <h4>{% trans "Choose category" %}</h4>
         <div class="side_categories card card-body bg-light">
             <ul class="nav nav-list flex-column">
                 <li class="mt-2">
@@ -67,7 +67,7 @@
                     </a>
                 </li>
                 {% for tree_category in tree_categories %}
-                    <li class="mt-2">
+                    <li class="mt-2" style="margin-left: {% widthratio tree_category.level 1 1 %}rem;">
                         <a href="{{ tree_category.url }}">
                             {% if tree_category.pk == category.pk %}
                                 <strong>{{ tree_category.name }}</strong>
@@ -75,11 +75,7 @@
                                 {{ tree_category.name }}
                             {% endif %}
                         </a>
-
-                        {% if tree_category.has_children %}<ul>{% else %}</li>{% endif %}
-                        {% for n in tree_category.num_to_close %}
-                            </ul></li>
-                        {% endfor %}
+                    </li>
                 {% endfor %}
             </ul>
         </div>
