@@ -10,3 +10,13 @@ class PartnerUserLinkAdmin(admin.ModelAdmin):
     list_display = ("partner", "user")
     list_filter = ("partner",)
     search_fields = ("user__username", "user__email", "partner__name")
+from django.contrib import admin
+
+from .models import DesignRequest
+
+
+@admin.register(DesignRequest)
+class DesignRequestAdmin(admin.ModelAdmin):
+    list_display = ("idea", "name", "email", "created_at")
+    search_fields = ("idea", "name", "email", "details")
+    readonly_fields = ("created_at",)

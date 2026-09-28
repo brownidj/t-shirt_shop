@@ -23,6 +23,8 @@ from oscar.apps.partner.models import Partner, StockRecord
 from PIL import Image, ImageChops
 from django.conf import settings
 
+from .forms import DesignRequestForm
+
 
 KIDS_STAPLE_TEE_COLOURS = frozenset(
     {
@@ -99,6 +101,19 @@ def slideshow_home(request):
             }
         )
     return render(request, "topository/home.html", {"slides": slides})
+
+
+def request_design(request):
+    """Collect a shopper's request for a new T-shirt design."""
+    if request.method == "POST":
+        form = DesignRequestForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Thank you. Your design request has been received.")
+            return redirect("request_design")
+    else:
+        form = DesignRequestForm()
+    return render(request, "topository/request_design.html", {"form": form})
 
 
 # ---- Helper functions copied from your script ----

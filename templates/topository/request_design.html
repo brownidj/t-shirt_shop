@@ -1,0 +1,41 @@
+{% extends "oscar/layout.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Request a t-shirt design" %} | {{ block.super }}{% endblock %}
+
+{% block mini_basket %}{% endblock %}
+
+{% block navigation %}
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container px-0">
+            <a class="nav-link text-white" href="{% url 'catalogue:index' %}">{% trans "Browse store" %}</a>
+        </div>
+    </nav>
+{% endblock %}
+
+{% block breadcrumbs %}
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ homepage_url }}">{% trans "Home" %}</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{% trans "Request a design" %}</li>
+        </ol>
+    </nav>
+{% endblock %}
+
+{% block content %}
+    <div class="col-lg-8 px-0">
+        <h1>{% trans "Request a t-shirt design" %}</h1>
+        <p>Tell us what you would like to see on a T-shirt. We will review your idea and get in touch using the email address you provide.</p>
+        <form method="post" novalidate>
+            {% csrf_token %}
+            {% for field in form %}
+                <div class="form-group">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                </div>
+            {% endfor %}
+            <button type="submit" class="btn btn-primary">{% trans "Send request" %}</button>
+        </form>
+    </div>
+{% endblock %}

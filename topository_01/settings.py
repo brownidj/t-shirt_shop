@@ -2,11 +2,25 @@ from pathlib import Path
 from django.urls import reverse_lazy
 from oscar.defaults import OSCAR_DASHBOARD_NAVIGATION as OSCAR_DEFAULT_DASHBOARD_NAVIGATION
 from oscar.defaults import *  # noqa
+import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-SECRET_KEY = "dev-change-me"
-DEBUG = True
-ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
+
+DEBUG = os.environ.get("DJANGO_DEBUG", "True").lower() == "true"
+
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "")
+if not SECRET_KEY:
+    if DEBUG:
+        SECRET_KEY = "dev-change-me"
+    else:
+        raise RuntimeError("DJANGO_SECRET_KEY must be set in production")
+ALLOWED_HOSTS = [
+    host.strip()
+    for host in os.environ.get(
+        "DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1"
+    ).split(",")
+    if host.strip()
+]
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTHENTICATION_BACKENDS = ["topository_01.auth_backends.UsernameOrEmailBackend"]
 
@@ -128,8 +142,6 @@ HAYSTACK_CONNECTIONS = {
 }
 
 HAYSTACK_SIGNAL_PROCESSOR = 'haystack.signals.RealtimeSignalProcessor'
-
-
 
 # --- Oscar overrides (defaults loaded above via `from oscar.defaults import *`) ---
 OSCAR_SHOP_NAME = "Topository"

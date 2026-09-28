@@ -9,6 +9,7 @@ oscar_app = apps.get_app_config("oscar")
 
 urlpatterns = [
     path("", views.slideshow_home, name="slideshow-home"),
+    path("request-a-design/", views.request_design, name="request_design"),
     path("admin/", admin.site.urls),
     # Include Oscar without an outer namespace so child namespaces (e.g. 'dashboard') stay top-level
 
