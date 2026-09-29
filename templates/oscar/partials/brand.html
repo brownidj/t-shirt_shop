@@ -12,22 +12,30 @@
     }
     .header .h1 > a {
         display: block;
-        width: min(29.5rem, 100%);
-        flex: 0 0 min(29.5rem, 100%);
+        width: min(18.585rem, 100%);
+        flex: 0 0 min(18.585rem, 100%);
         aspect-ratio: 472 / 157;
         background: url('/media/images/logo/red_topository_logo_Futura_t 4cm.png') left center / contain no-repeat;
         overflow: hidden;
         text-indent: -9999px;
         white-space: nowrap;
-        transform: translate(-39px, 20px);
+        transform: translate(-33px, 0);
     }
     .header .h1 > small {
+        align-self: center;
         margin: 0 0 0 auto;
         text-align: right;
-        transform: translateY(20px);
+        transform: translateY(5px);
+    }
+    .header .brand-product-type {
+        margin-left: calc(-39px);
+        font-size: 48pt;
+        line-height: 1;
+        white-space: nowrap;
     }
 </style>
 <div class="col-sm-6 h1">
     <a href="{{ homepage_url }}">{% block brand_title %}{{ shop_name }}{% endblock %}</a>
+    <span class="brand-product-type">T-shirts</span>
     <small>{{ shop_tagline }}</small>
 </div>

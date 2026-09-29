@@ -54,6 +54,11 @@
 
             {% block nav_extra %}
                 <div class="navbar-nav flex-row align-items-center my-2 my-lg-0">
+                    {% if product and product.product_class.name == "Designs" %}
+                        <button id="add-to-cart" form="tshirt-add-form" type="submit" class="btn btn-primary mr-2" disabled>
+                            {% trans "Add to cart" %}
+                        </button>
+                    {% endif %}
                     <span class="nav-link mr-2">
                         <strong>{% trans "Cart total:" %}</strong>
                         {% if request.basket.is_tax_known %}

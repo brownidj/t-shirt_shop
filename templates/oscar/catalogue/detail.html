@@ -6,9 +6,6 @@
 {% load static %}
 {% load catalogue_navigation_tags %}
 
-{# Cart controls live in the Browse store navigation line on catalogue pages. #}
-{% block mini_basket %}{% endblock %}
-
 {% block breadcrumbs %}
     {% design_navigation as design_navigation %}
     <nav aria-label="breadcrumb">
@@ -21,16 +18,31 @@
             {% endwith %}
             <li class="breadcrumb-item active" aria-current="page">{{ product.get_title }}</li>
             {% if design_navigation.category %}
-                <li class="ml-auto d-flex align-items-center design-navigation" aria-label="{% trans 'Design navigation' %}">
-                    {% if design_navigation.previous %}
-                        <a href="{{ design_navigation.previous.get_absolute_url }}" aria-label="{% trans 'Previous design' %}" title="{% trans 'Previous design' %}">&laquo;</a>
+                <li class="ml-auto d-flex align-items-center design-navigation" aria-label="{% trans 'Beginning or previous design' %}">
+                    {% if design_navigation.first %}
+                        <a href="{{ design_navigation.first.get_absolute_url }}{% if request.GET.line %}?line={{ request.GET.line }}{% endif %}" aria-label="{% trans 'First design in category' %}" title="{% trans 'First design in category' %}"><i class="fas fa-angle-double-left" aria-hidden="true"></i></a>
                     {% else %}
-                        <span class="design-navigation__disabled" aria-hidden="true">&laquo;</span>
+                        <span class="design-navigation__disabled" aria-hidden="true"><i class="fas fa-angle-double-left"></i></span>
                     {% endif %}
-                    {% if design_navigation.next %}
-                        <a href="{{ design_navigation.next.get_absolute_url }}" aria-label="{% trans 'Next design' %}" title="{% trans 'Next design' %}">&raquo;</a>
+                    {% if design_navigation.previous %}
+                        <a href="{{ design_navigation.previous.get_absolute_url }}{% if request.GET.line %}?line={{ request.GET.line }}{% endif %}" aria-label="{% trans 'Previous design' %}" title="{% trans 'Previous design' %}"><i class="fas fa-angle-left" aria-hidden="true"></i></a>
                     {% else %}
-                        <span class="design-navigation__disabled" aria-hidden="true">&raquo;</span>
+                        <span class="design-navigation__disabled" aria-hidden="true"><i class="fas fa-angle-left"></i></span>
+                    {% endif %}
+                </li>
+                {% if product.product_class.name == "Designs" %}
+                    <li id="variant-status" class="d-flex align-items-center text-muted" aria-live="polite"></li>
+                {% endif %}
+                <li class="d-flex align-items-center design-navigation" aria-label="{% trans 'Next or final design' %}">
+                    {% if design_navigation.next %}
+                        <a href="{{ design_navigation.next.get_absolute_url }}{% if request.GET.line %}?line={{ request.GET.line }}{% endif %}" aria-label="{% trans 'Next design' %}" title="{% trans 'Next design' %}"><i class="fas fa-angle-right" aria-hidden="true"></i></a>
+                    {% else %}
+                        <span class="design-navigation__disabled" aria-hidden="true"><i class="fas fa-angle-right"></i></span>
+                    {% endif %}
+                    {% if design_navigation.last %}
+                        <a href="{{ design_navigation.last.get_absolute_url }}{% if request.GET.line %}?line={{ request.GET.line }}{% endif %}" aria-label="{% trans 'Last design in category' %}" title="{% trans 'Last design in category' %}"><i class="fas fa-angle-double-right" aria-hidden="true"></i></a>
+                    {% else %}
+                        <span class="design-navigation__disabled" aria-hidden="true"><i class="fas fa-angle-double-right"></i></span>
                     {% endif %}
                 </li>
             {% endif %}
@@ -44,8 +56,8 @@
         /* Match the home-page Topository wordmark in the catalogue header. */
         .header .h1 > a {
             display: block;
-            width: min(29.5rem, 100%);
-            flex: 0 0 min(29.5rem, 100%);
+            width: min(18.585rem, 100%);
+            flex: 0 0 min(18.585rem, 100%);
             aspect-ratio: 472 / 157;
             background: url('/media/images/logo/red_topository_logo_Futura_t 4cm.png') left center / contain no-repeat;
             overflow: hidden;
@@ -53,9 +65,11 @@
             white-space: nowrap;
         }
 
-        .design-navigation { gap: .75rem; font-size: 1.8rem; line-height: 1; }
-        .design-navigation a { text-decoration: none; }
-        .design-navigation__disabled { color: #adb5bd; }
+        .design-navigation { gap: .75rem; font-size: 1rem; line-height: 1; }
+        .design-navigation a, .design-navigation__disabled { color: #007bff; font-weight: 700; text-decoration: none; }
+        #variant-status { margin: 0 6px; font-size: 1rem; line-height: 1; text-align: right; white-space: nowrap; }
+        .tshirt-style-heading { display: flex; align-items: baseline; gap: .5rem; white-space: nowrap; }
+        .tshirt-style-heading h2, .tshirt-style-heading h3 { margin-bottom: .5rem; }
 
         #style-options .style-option:hover:not(.active) {
             background-color: #000000;
@@ -143,6 +157,9 @@
             {% if product.product_class.name == "Designs" %}
                 <div id="variant-panel" class="card mt-3 d-none">
                     <div class="card-body">
+                        <button id="update-cart" form="tshirt-add-form" type="submit" class="btn btn-primary float-right d-none" disabled>
+                            {% trans "Update cart" %}
+                        </button>
                         <h3 id="variant-panel-title" class="h5 mb-2"></h3>
                         <p id="variant-panel-price" class="h5 mb-2"></p>
                         <p id="variant-panel-meta" class="mb-2"></p>
@@ -163,10 +180,11 @@
 
             {% if product.product_class.name == "Designs" %}
 
-                    <h2 class="h4 mt-2">{% trans "Choose your T-shirt" %}</h2>
-
                     <div class="mb-3">
-                        <h3 class="h5 mb-2">{% trans "Style" %}</h3>
+                        <div class="tshirt-style-heading mt-2">
+                            <h2 class="h4">{% trans "Choose your T-shirt" %}</h2>
+                            <h3 class="h5">{% trans "Style" %}</h3>
+                        </div>
                         <div id="style-options" class="d-flex flex-wrap gap-2">
                             {# Style buttons will be populated by JS #}
                         </div>
@@ -190,15 +208,12 @@
                         </div>
                     </div>
 
-                    <p id="variant-status" class="mt-2 text-muted small"></p>
                     <form id="tshirt-add-form" method="post" action="{% url 'configured_tshirt_add' product.id %}">
                         {% csrf_token %}
                         <input type="hidden" name="style" id="selected-style">
                         <input type="hidden" name="colour" id="selected-colour">
                         <input type="hidden" name="size" id="selected-size">
-                        <button id="add-to-cart" type="submit" class="btn btn-primary" disabled>
-                            {% trans "Add to cart" %}
-                        </button>
+                        <input type="hidden" name="line" id="selected-basket-line">
                     </form>
 
         {# ====================================== #}
@@ -237,6 +252,8 @@
                             var selectedStyleInput = document.getElementById("selected-style");
                             var selectedColourInput = document.getElementById("selected-colour");
                             var selectedSizeInput = document.getElementById("selected-size");
+                            var selectedBasketLineInput = document.getElementById("selected-basket-line");
+                            var updateCartButton = document.getElementById("update-cart");
 
                             // New: panel elements
                             var panel       = document.getElementById("variant-panel");
@@ -289,34 +306,38 @@
                             // expects a <div id="tshirt-variant-panel"> with child elements
                             // #variant-title, #variant-price, #variant-meta, #variant-image
                             function updateVariantPanel(v) {
-                                var panel = document.getElementById("variant-panel");
-                                var imgEl = document.getElementById("variant-panel-image");
-
-                                if (!panel || !imgEl) {
+                                if (!panel || !panelTitle || !panelPrice || !panelMeta || !panelImg) {
                                     return;
                                 }
 
                                 // Nothing selected / no matching variant → hide the card
                                 if (!v) {
                                     panel.classList.add("d-none");
-                                    imgEl.removeAttribute("src");
-                                    imgEl.alt = "";
+                                    panelTitle.textContent = "";
+                                    panelPrice.textContent = "";
+                                    panelMeta.textContent = "";
+                                    panelImg.removeAttribute("src");
+                                    panelImg.alt = "";
                                     return;
                                 }
 
                                 // Show the card
                                 panel.classList.remove("d-none");
+                                var styleName = stylesMap[v.style_code] || v.style_code || "";
+                                panelTitle.textContent = styleName;
+                                panelPrice.textContent = v.price || "";
+                                panelMeta.textContent = [v.colour, v.size].filter(Boolean).join(" / ");
 
                                 // The preview is rendered from the selected options.  A database
                                 // child variant is not needed until a shopper actually buys it.
                                 if (v.style_code && v.colour) {
-                                    imgEl.src = "{% url 'tshirt_preview' product.id %}?style=" +
+                                    panelImg.src = "{% url 'tshirt_preview' product.id %}?style=" +
                                         encodeURIComponent(v.style_code) + "&colour=" +
                                         encodeURIComponent(v.colour);
-                                    imgEl.alt = v.title || "T-shirt preview";
+                                    panelImg.alt = styleName + " / " + v.colour + " / " + v.size;
                                 } else {
-                                    imgEl.removeAttribute("src");
-                                    imgEl.alt = "";
+                                    panelImg.removeAttribute("src");
+                                    panelImg.alt = "";
                                 }
                             }
 
@@ -365,11 +386,36 @@
 
                             // Keep sizes in ascending order (XS…4XL).
 
-                            var selectedStyle  = "AS-5001";
+                            var selectionParameters = new URLSearchParams(window.location.search);
+                            var requestedStyle = selectionParameters.get("style");
+                            var requestedColour = selectionParameters.get("colour");
+                            var requestedSize = selectionParameters.get("size");
+                            var requestedBasketLine = selectionParameters.get("line");
+                            var selectedStyle  = requestedStyle || "AS-5001";
                             var defaultColour  = "Burgundy";
-                            var selectedColour = defaultColour;
-                            var selectedSize   = "M";
+                            var defaultSize    = "M";
+                            var selectedColour = requestedColour || defaultColour;
+                            var selectedSize   = requestedSize || defaultSize;
                             var colourMap      = {};  // name -> hex, loaded from JSON
+                            var colourSessionKey = "topository-tshirt-colour";
+                            var sizeSessionKey = "topository-tshirt-size";
+
+                            try {
+                                if (!requestedColour) {
+                                    selectedColour = window.sessionStorage.getItem(colourSessionKey) || defaultColour;
+                                }
+                                if (!requestedSize) {
+                                    selectedSize = window.sessionStorage.getItem(sizeSessionKey) || defaultSize;
+                                }
+                            } catch (error) {
+                                // Session storage can be unavailable in private browsing modes.
+                            }
+
+                            if (requestedBasketLine && selectedBasketLineInput) {
+                                selectedBasketLineInput.value = requestedBasketLine;
+                                addToCartButton.disabled = true;
+                                if (updateCartButton) updateCartButton.classList.remove("d-none");
+                            }
 
                             function availableColours() {
                                 return (configuration.style_colours &&
@@ -379,6 +425,34 @@
                             function availableSizes() {
                                 return (configuration.style_sizes &&
                                     configuration.style_sizes[selectedStyle]) || sizes;
+                            }
+
+                            function firstAvailable(options, preferred) {
+                                return options.indexOf(preferred) !== -1 ? preferred : (options[0] || "");
+                            }
+
+                            function normaliseSelections() {
+                                var coloursForStyle = availableColours();
+                                var sizesForStyle = availableSizes();
+                                var colourChanged = coloursForStyle.indexOf(selectedColour) === -1;
+                                var sizeChanged = sizesForStyle.indexOf(selectedSize) === -1;
+
+                                if (colourChanged) {
+                                    selectedColour = firstAvailable(coloursForStyle, defaultColour);
+                                }
+                                if (sizeChanged) {
+                                    selectedSize = firstAvailable(sizesForStyle, defaultSize);
+                                }
+                                return { colourChanged: colourChanged, sizeChanged: sizeChanged };
+                            }
+
+                            function saveSelections() {
+                                try {
+                                    window.sessionStorage.setItem(colourSessionKey, selectedColour);
+                                    window.sessionStorage.setItem(sizeSessionKey, selectedSize);
+                                } catch (error) {
+                                    // Session storage can be unavailable in private browsing modes.
+                                }
                             }
 
                             function clearColourWarning() {
@@ -410,10 +484,8 @@
                                             el.classList.remove("active");
                                         });
                                         btn.classList.add("active");
-                                        if (previousColour && availableColours().indexOf(previousColour) === -1) {
-                                            selectedColour = availableColours().indexOf(defaultColour) !== -1
-                                                ? defaultColour
-                                                : availableColours()[0] || "";
+                                        var changes = normaliseSelections();
+                                        if (changes.colourChanged) {
                                             if (colourWarning) {
                                                 colourWarning.textContent = previousColour +
                                                     " is not available for this style. Please choose another colour.";
@@ -422,9 +494,7 @@
                                         } else {
                                             clearColourWarning();
                                         }
-                                        if (availableSizes().indexOf(selectedSize) === -1) {
-                                            selectedSize = availableSizes()[0] || "";
-                                        }
+                                        saveSelections();
                                         renderColours();
                                         renderSizes();
                                         updateStatusAndPanel();
@@ -477,6 +547,7 @@
 
                                     swatch.addEventListener("click", function () {
                                         selectedColour = colour;
+                                        saveSelections();
                                         clearColourWarning();
 
                                         colourContainer.querySelectorAll(".colour-swatch").forEach(function (el) {
@@ -521,6 +592,7 @@
                                     input.addEventListener("change", function () {
                                         if (input.checked) {
                                             selectedSize = size;
+                                            saveSelections();
                                             sizeContainer.querySelectorAll(".size-option").forEach(function (el) {
                                                 el.classList.remove("active");
                                             });
@@ -583,30 +655,36 @@
                                     status.textContent = "";
                                     updateVariantPanel(null);   // hide the panel
                                     addToCartButton.disabled = true;
+                                    if (updateCartButton) updateCartButton.disabled = true;
                                     return;
                                 }
 
                                 if (v) {
+                                    var styleName = stylesMap[v.style_code] || v.style_code;
                                     status.textContent = v.price
-                                        ? "Selected: " + v.style_code + " / " + v.colour + " / " + v.size + " — " + v.price
-                                        : "Selected: " + v.style_code + " / " + v.colour + " / " + v.size;
+                                        ? styleName + " / " + v.colour + " / " + v.size + " — " + v.price
+                                        : styleName + " / " + v.colour + " / " + v.size;
 
                                     // Show the preview card (image only)
                                     updateVariantPanel(v);
                                     selectedStyleInput.value = v.style_code;
                                     selectedColourInput.value = v.colour;
                                     selectedSizeInput.value = v.size;
-                                    addToCartButton.disabled = false;
+                                    addToCartButton.disabled = !!requestedBasketLine;
+                                    if (updateCartButton) updateCartButton.disabled = false;
                                 } else {
                                     status.textContent = "That combination is not available.";
                                     updateVariantPanel(null);
                                     addToCartButton.disabled = true;
+                                    if (updateCartButton) updateCartButton.disabled = true;
                                 }
                             }
 
 
 
                             function initUI() {
+                                normaliseSelections();
+                                saveSelections();
                                 renderStyles();
                                 renderColours();
                                 renderSizes();

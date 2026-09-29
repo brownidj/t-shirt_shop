@@ -1,0 +1,11 @@
+{% extends "oscar/layout.html" %}
+{% load i18n %}
+{% block title %}{% trans "Basket" %} | {{ block.super }}{% endblock %}
+{% block mini_basket %}{% endblock %}
+{% block headertext %}{% trans "Basket" %}{% endblock %}
+{% block content %}
+    {% include 'oscar/basket/partials/basket_content.html' %}
+    {% if not basket.is_empty %}
+        <form method="post" action="{% url 'stripe_checkout' %}" class="text-right mt-3">{% csrf_token %}<button type="submit" class="btn btn-success btn-lg">{% trans "Secure checkout" %}</button></form>
+    {% endif %}
+{% endblock %}

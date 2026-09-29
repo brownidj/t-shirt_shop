@@ -1,16 +1,23 @@
 import io
 import json
 import os
+from importlib import import_module
 from hashlib import sha256
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 from pathlib import Path
+from urllib.parse import urlencode
 
 from django.contrib import messages
 from django.core.cache import cache
 from django.db import transaction
-from django.http import HttpResponse, Http404
+from django.http import HttpResponse, Http404, HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.views.decorators.http import require_POST
+from oscar.apps.customer.views import (
+    AccountAuthView as OscarAccountAuthView,
+    AccountRegistrationView as OscarAccountRegistrationView,
+)
 from oscar.apps.catalogue.models import (
     AttributeOption,
     AttributeOptionGroup,
@@ -20,10 +27,67 @@ from oscar.apps.catalogue.models import (
     ProductImage,
 )
 from oscar.apps.partner.models import Partner, StockRecord
+from oscar.apps.catalogue.views import ProductDetailView as OscarProductDetailView
 from PIL import Image, ImageChops
 from django.conf import settings
 
-from .forms import DesignRequestForm
+from .forms import CustomerRegistrationForm, DesignRequestForm
+
+
+class AccountAuthView(OscarAccountAuthView):
+    registration_form_class = CustomerRegistrationForm
+
+
+class AccountRegistrationView(OscarAccountRegistrationView):
+    form_class = CustomerRegistrationForm
+
+
+def _stripe():
+    if not settings.STRIPE_SECRET_KEY:
+        raise RuntimeError("Stripe is not configured")
+    stripe = import_module("stripe")
+    stripe.api_key = settings.STRIPE_SECRET_KEY
+    return stripe
+
+
+@require_POST
+def stripe_checkout(request):
+    """Start a hosted Stripe Checkout session from server-side basket prices."""
+    if request.basket.is_empty:
+        return redirect("basket:summary")
+    try:
+        stripe = _stripe()
+    except RuntimeError:
+        messages.error(request, "Online payments are not configured yet.")
+        return redirect("basket:summary")
+    line_items = []
+    for line in request.basket.all_lines():
+        price = line.price_incl_tax or line.price_excl_tax
+        if price is None:
+            messages.error(request, "One or more basket items cannot be priced.")
+            return redirect("basket:summary")
+        line_items.append({"price_data": {"currency": "aud", "unit_amount": int((price * 100).quantize(Decimal("1"), rounding=ROUND_HALF_UP)), "product_data": {"name": line.description}, "tax_behavior": "inclusive"}, "quantity": line.quantity})
+    try:
+        session = stripe.checkout.Session.create(
+            mode="payment", line_items=line_items,
+            shipping_address_collection={"allowed_countries": ["AU"]},
+            shipping_options=[{"shipping_rate_data": {"display_name": "Standard shipping", "type": "fixed_amount", "fixed_amount": {"amount": settings.STRIPE_SHIPPING_CENTS, "currency": "aud"}, "tax_behavior": "inclusive"}}],
+            success_url=request.build_absolute_uri(reverse("stripe_checkout_success")) + "?session_id={CHECKOUT_SESSION_ID}",
+            cancel_url=request.build_absolute_uri(reverse("basket:summary")),
+            customer_email=request.user.email if request.user.is_authenticated else None,
+        )
+    except stripe.StripeError:
+        messages.error(request, "Stripe could not start checkout. Please try again.")
+        return redirect("basket:summary")
+    return redirect(session.url)
+
+
+def stripe_checkout_success(request):
+    try:
+        session = _stripe().checkout.Session.retrieve(request.GET.get("session_id", ""))
+    except Exception:
+        return HttpResponseBadRequest("We could not confirm this Stripe payment.")
+    return render(request, "topository/stripe_success.html", {"paid": session.payment_status == "paid"})
 
 
 KIDS_STAPLE_TEE_COLOURS = frozenset(
@@ -46,6 +110,12 @@ TSHIRT_STYLE_PRICES = {
     "AS-5001": Decimal("55.00"),
     "AS-4001": Decimal("50.00"),
     "AS-3005": Decimal("45.00"),
+}
+
+TSHIRT_STYLE_NAMES = {
+    "AS-5001": "Men's Tee",
+    "AS-4001": "Women's Tee",
+    "AS-3005": "Kid's Tee",
 }
 
 MENS_STAPLE_TEE_COLOURS = frozenset(
@@ -101,6 +171,28 @@ def slideshow_home(request):
             }
         )
     return render(request, "topository/home.html", {"slides": slides})
+
+
+def configured_product_detail(request, product_slug, pk):
+    """Return a configured basket item to its parent design and selections."""
+    product = get_object_or_404(Product, pk=pk)
+    if product.is_child and product.parent_id:
+        def option_text(attribute_code):
+            value = getattr(product.attr, attribute_code, None)
+            return value.option if hasattr(value, "option") else str(value or "")
+
+        selections = {
+            "style": option_text("tshirt_style"),
+            "colour": option_text("colour"),
+            "size": option_text("size"),
+        }
+        if all(selections.values()):
+            line_id = request.basket.lines.filter(product=product).values_list("pk", flat=True).first()
+            if line_id:
+                selections["line"] = line_id
+            return redirect(f"{product.parent.get_absolute_url()}?{urlencode(selections)}")
+
+    return OscarProductDetailView.as_view()(request, product_slug=product_slug, pk=pk)
 
 
 def request_design(request):
@@ -327,6 +419,7 @@ def add_configured_tshirt(request, product_id):
     style_code = request.POST.get("style", "").strip()
     colour = request.POST.get("colour", "").strip()
     size = request.POST.get("size", "").strip()
+    basket_line_id = request.POST.get("line", "").strip()
 
     if not style_code or not colour or not size:
         raise Http404("Choose a style, colour and size before adding to basket")
@@ -401,7 +494,7 @@ def add_configured_tshirt(request, product_id):
             child = Product.objects.create(
                 parent=design,
                 upc=sku,
-                title=f"{design.title} – {style_code} – {colour} – {size}",
+                title=f"{design.title} – {TSHIRT_STYLE_NAMES[style_code]} – {colour} – {size}",
                 structure=Product.CHILD,
                 product_class=style.product_class,
             )
@@ -426,6 +519,49 @@ def add_configured_tshirt(request, product_id):
             },
         )
 
-    request.basket.add_product(child, quantity=1)
-    messages.success(request, f"{child.title} was added to your basket.")
+    basket_line = None
+    if basket_line_id.isdigit():
+        basket_line = request.basket.lines.filter(pk=int(basket_line_id)).first()
+
+    if basket_line:
+        old_price = (
+            basket_line.price_incl_tax
+            if basket_line.price_incl_tax is not None
+            else basket_line.price_excl_tax
+        )
+        stock_info = request.basket.get_stock_info(child, [])
+        new_price = (
+            stock_info.price.incl_tax
+            if stock_info.price.is_tax_known
+            else stock_info.price.excl_tax
+        )
+        basket_line.product = child
+        basket_line.stockrecord = stock_info.stockrecord
+        basket_line.price_excl_tax = stock_info.price.excl_tax
+        basket_line.price_incl_tax = (
+            stock_info.price.incl_tax if stock_info.price.is_tax_known else None
+        )
+        basket_line.price_currency = stock_info.price.currency
+        basket_line.tax_code = stock_info.price.tax_code
+        basket_line.save(
+            update_fields=[
+                "product",
+                "stockrecord",
+                "price_excl_tax",
+                "price_incl_tax",
+                "price_currency",
+                "tax_code",
+            ]
+        )
+        request.basket.reset_offer_applications()
+        if old_price is not None and old_price != new_price:
+            messages.warning(
+                request,
+                f"The price of your '{design.title} t-shirt' has changed from "
+                f"A${old_price:.2f} to A${new_price:.2f} since you changed "
+                "the t-shirt style",
+            )
+    else:
+        request.basket.add_product(child, quantity=1)
+        messages.success(request, f"{child.title} was added to your basket.")
     return redirect("basket:summary")

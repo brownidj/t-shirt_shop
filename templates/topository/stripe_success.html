@@ -1,0 +1,3 @@
+{% extends "oscar/layout.html" %}
+{% load i18n %}
+{% block content %}{% if paid %}<h1>{% trans "Thank you for your order" %}</h1><p>{% trans "Your Stripe payment has been confirmed." %}</p>{% else %}<h1>{% trans "Payment processing" %}</h1><p>{% trans "Your payment is still being confirmed." %}</p>{% endif %}<p><a class="btn btn-primary" href="{% url 'catalogue:index' %}">{% trans "Continue shopping" %}</a></p>{% endblock %}

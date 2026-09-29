@@ -1,0 +1,19 @@
+<style>
+    .basket_summary .input-group-append { display: none; }
+    .basket_summary .checkout-quantity { width: 50%; }
+</style>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        var basketForm = document.getElementById("basket_formset");
+        if (!basketForm) return;
+
+        basketForm.querySelectorAll(".input-group-append button[type='submit']").forEach(function (button) {
+            button.remove();
+        });
+        basketForm.querySelectorAll("input[name$='-quantity']").forEach(function (input) {
+            input.addEventListener("change", function () {
+                if (input.checkValidity()) basketForm.submit();
+            });
+        });
+    });
+</script>

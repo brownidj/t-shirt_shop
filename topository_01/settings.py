@@ -8,6 +8,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 DEBUG = os.environ.get("DJANGO_DEBUG", "True").lower() == "true"
 
+# During local development, show transactional emails in the runserver console
+# instead of trying to contact a local SMTP server.  Production continues to
+# use Django's SMTP backend and must be configured with a real mail provider.
+if DEBUG:
+    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "")
 if not SECRET_KEY:
     if DEBUG:
@@ -166,6 +172,8 @@ OSCAR_SEARCH_FACETS = {"fields": {}, "queries": {}}
 # Locale & pagination
 OSCAR_DEFAULT_CURRENCY = "AUD"
 OSCAR_DEFAULT_COUNTRY = "AU"
+STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY", "")
+STRIPE_SHIPPING_CENTS = 1000
 OSCAR_PARTNER_STRATEGY = "topository_01.strategy.Selector"
 OSCAR_PRODUCTS_PER_PAGE = 8
 OSCAR_OFFERS_PER_PAGE = 8

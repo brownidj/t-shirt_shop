@@ -19,7 +19,7 @@
             {% if user.is_authenticated %}
                 <a class="btn btn-outline-light home-login-button" href="{% url 'customer:summary' %}">{% trans "Account" %}</a>
             {% else %}
-                <a class="btn btn-outline-light home-login-button" href="{% url 'customer:login' %}">{% trans "Login or register" %}</a>
+                <a class="btn btn-outline-light home-login-button" href="{% url 'customer:login' %}">{% trans "Login" %}</a>
             {% endif %}
         </div>
     </nav>
@@ -28,7 +28,7 @@
 {% block content %}
     {% if slides %}
         <section class="artwork-slideshow" aria-label="Featured artwork">
-            <h1 class="slideshow-title">Custom Designs for T-shirts</h1>
+            <p class="slideshow-title">Custom designs</p>
             <img class="slideshow-logo" src="/media/images/logo/green_topository_logo_Futura_inverted.png" alt="Topository">
             {% for slide in slides %}
                 <figure class="artwork-slide{% if forloop.first %} is-active{% endif %}">
@@ -61,8 +61,8 @@
         }
         .header .h1 > a {
             display: block;
-            width: min(29.5rem, 100%);
-            flex: 0 0 min(29.5rem, 100%);
+            width: min(18.585rem, 100%);
+            flex: 0 0 min(18.585rem, 100%);
             aspect-ratio: 472 / 157;
             background: url('/media/images/logo/red_topository_logo_Futura_t 4cm.png') left center / contain no-repeat;
             overflow: hidden;
@@ -71,10 +71,10 @@
             transform: translate(-39px, 20px);
         }
         .header .h1 > small { margin: 0 0 0 auto; text-align: right; transform: translateY(20px); }
-        .artwork-slideshow { position: relative; min-height: 70vh; background: #111; overflow: hidden; }
+        .artwork-slideshow { position: relative; height: calc(70vh - 160px); background: #111; overflow: hidden; }
         .slideshow-title {
             position: absolute;
-            top: 1rem;
+            bottom: 1rem;
             left: 1rem;
             z-index: 2;
             margin: 0;
@@ -85,7 +85,7 @@
             line-height: 1.1;
         }
         .slideshow-logo { position: absolute; bottom: 1rem; right: 1rem; z-index: 2; width: min(12rem, 25%); height: auto; }
-        .artwork-slide { display: none; margin: 0; height: 70vh; align-items: center; justify-content: center; }
+        .artwork-slide { display: none; margin: 0; height: 70vh; align-items: center; justify-content: center; transform: translateY(-80px); }
         .artwork-slide.is-active { display: flex; }
         .artwork-slide-link { display: flex; height: 100%; width: 100%; align-items: center; justify-content: center; }
         .artwork-slide img { max-width: 100%; max-height: 70vh; object-fit: contain; }

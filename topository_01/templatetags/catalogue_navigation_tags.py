@@ -11,7 +11,13 @@ def design_navigation(context):
     """Return adjacent public designs from the displayed product's category."""
     product = context["product"]
     category = product.get_categories().first()
-    navigation = {"category": category, "previous": None, "next": None}
+    navigation = {
+        "category": category,
+        "first": None,
+        "previous": None,
+        "next": None,
+        "last": None,
+    }
 
     if not category or product.product_class.name != "Designs":
         return navigation
@@ -32,6 +38,8 @@ def design_navigation(context):
         return navigation
 
     if len(designs) > 1:
+        navigation["first"] = designs[0] if position else None
         navigation["previous"] = designs[(position - 1) % len(designs)]
         navigation["next"] = designs[(position + 1) % len(designs)]
+        navigation["last"] = designs[-1] if position + 1 < len(designs) else None
     return navigation
