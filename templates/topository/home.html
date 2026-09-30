@@ -71,7 +71,7 @@
             transform: translate(-39px, 20px);
         }
         .header .h1 > small { margin: 0 0 0 auto; text-align: right; transform: translateY(20px); }
-        .artwork-slideshow { position: relative; height: calc(70vh - 160px); background: #111; overflow: hidden; }
+        .artwork-slideshow { position: relative; height: calc(70vh - 200px); background: #111; overflow: hidden; }
         .slideshow-title {
             position: absolute;
             bottom: 1rem;
@@ -85,7 +85,7 @@
             line-height: 1.1;
         }
         .slideshow-logo { position: absolute; bottom: 1rem; right: 1rem; z-index: 2; width: min(12rem, 25%); height: auto; }
-        .artwork-slide { display: none; margin: 0; height: 70vh; align-items: center; justify-content: center; transform: translateY(-80px); }
+        .artwork-slide { display: none; margin: 0; height: 70vh; align-items: center; justify-content: center; transform: translateY(-120px); }
         .artwork-slide.is-active { display: flex; }
         .artwork-slide-link { display: flex; height: 100%; width: 100%; align-items: center; justify-content: center; }
         .artwork-slide img { max-width: 100%; max-height: 70vh; object-fit: contain; }
@@ -93,6 +93,18 @@
         .slideshow-control:hover, .slideshow-control:focus { background: rgba(0, 0, 0, .8); }
         .slideshow-control.previous { left: .5rem; }
         .slideshow-control.next { right: .5rem; }
+        @media (max-width: 1100px) {
+            .artwork-slideshow { height: clamp(360px, calc(70vh - 200px), 700px); }
+            .slideshow-title, .slideshow-logo { bottom: 1.25rem; }
+        }
+        @media (max-width: 768px) {
+            .artwork-slideshow { height: clamp(360px, 60vh, 560px); }
+            .artwork-slide { height: 100%; transform: none; }
+            .artwork-slide img { max-height: 100%; }
+            .slideshow-title { left: 1rem; font-size: clamp(2rem, 8vw, 3rem); }
+            .slideshow-logo { right: 1rem; width: min(10rem, 35%); }
+            .slideshow-control { min-width: 44px; min-height: 44px; padding: .5rem .75rem; }
+        }
     </style>
 {% endblock %}
 
