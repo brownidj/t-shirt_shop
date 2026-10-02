@@ -4,18 +4,24 @@
 {% load category_tags %}
 {% load product_tags %}
 {% load i18n %}
-{% load widget_tweaks %}
 
 {% block title %}
-    {% if summary %}{{ summary }} |{% endif %} {{ block.super }}
+    {% if not category and not search_form.q.value %}
+        {% trans "All" %} |
+    {% elif summary %}
+        {{ summary }} |
+    {% endif %}
+    {{ block.super }}
 {% endblock %}
 
 {% block header %}
-    <div class="page-header">
-        <div class="d-flex justify-content-between align-items-baseline">
-            <h1>{% block headertext %}{{ summary }}{% endblock %}</h1>
-            <div class="text-muted text-right">
+    <div class="page-header catalogue-results-header">
+        <div class="d-flex align-items-center">
+            <div class="text-muted">
                 {% include "oscar/catalogue/partials/result_summary.html" %}
+            </div>
+            <div class="ml-auto">
+                {% include "oscar/catalogue/partials/pagination.html" %}
             </div>
         </div>
     </div>
@@ -39,6 +45,46 @@
             white-space: nowrap;
         }
 
+        .side_categories .category-nav__selected {
+            font-size: calc(1rem + 4pt);
+        }
+
+        .catalogue-product-grid > [class*="col-"] {
+            padding-right: 10px;
+            padding-left: 10px;
+        }
+
+        @media (min-width: 768px) {
+            .page .page_inner > .row > .sidebar {
+                flex: 0 0 33.333333%;
+                max-width: 33.333333%;
+            }
+
+            .page .page_inner > .row > .sidebar + div {
+                flex: 0 0 66.666667%;
+                max-width: 66.666667%;
+            }
+
+            .sidebar .side_categories {
+                width: max-content;
+                max-width: none;
+            }
+
+            .sidebar .side_categories .nav-list {
+                white-space: nowrap;
+            }
+        }
+
+        .catalogue-results-header {
+            margin-top: 4px;
+            border-bottom: 0;
+        }
+
+        .side_categories__request-design {
+            border-top: 1px solid #dee2e6;
+            padding-top: 1rem;
+        }
+
     </style>
 {% endblock %}
 
@@ -46,7 +92,7 @@
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="{{ homepage_url }}">{% trans "Home" %}</a></li>
-            <li class="breadcrumb-item active" aria-current="page">{{ summary }}</li>
+            <li class="breadcrumb-item active" aria-current="page">{% if not category and not search_form.q.value %}{% trans "All" %}{% else %}{{ summary }}{% endif %}</li>
         </ol>
     </nav>
 {% endblock breadcrumbs %}
@@ -54,13 +100,13 @@
 {% block column_left %}
     {% category_tree as tree_categories %}
     {% if tree_categories %}
-        <h4>{% trans "Choose category" %}</h4>
         <div class="side_categories card card-body bg-light">
+            <h4>{% trans "Choose category" %}</h4>
             <ul class="nav nav-list flex-column">
                 <li class="mt-2">
                     <a href="{% url 'catalogue:index' %}">
                         {% if not category %}
-                            <strong>{% trans "All" %}</strong>
+                            <strong class="category-nav__selected">{% trans "All" %}</strong>
                         {% else %}
                             {% trans "All" %}
                         {% endif %}
@@ -70,7 +116,7 @@
                     <li class="mt-2" style="margin-left: {% widthratio tree_category.level 1 1 %}rem;">
                         <a href="{{ tree_category.url }}">
                             {% if tree_category.pk == category.pk %}
-                                <strong>{{ tree_category.name }}</strong>
+                                <strong class="category-nav__selected">{{ tree_category.name }}</strong>
                             {% else %}
                                 {{ tree_category.name }}
                             {% endif %}
@@ -78,6 +124,9 @@
                     </li>
                 {% endfor %}
             </ul>
+            <div class="side_categories__request-design mt-3">
+                <a class="btn btn-primary btn-block" href="{% url 'request_design' %}">{% trans "Request a" %}<br>{% trans "design" %}</a>
+            </div>
         </div>
     {% endif %}
     {% if has_facets %}
@@ -97,30 +146,16 @@
     {% if products %}
         <section>
             <div>
-                <form method="get">
-                    {# Render other search params as hidden inputs #}
-                    {% for value in selected_facets %}
-                        <input type="hidden" name="selected_facets" value="{{ value }}" />
-                    {% endfor %}
-                    <input type="hidden" name="q" value="{{ search_form.q.value|default_if_none:"" }}" />
-
-                    <div class="catalogue-toolbar d-flex w-100 align-items-center mb-3">
-                        {% include "oscar/partials/pagination.html" %}
-                        {% if form %}
-                            <div class="d-flex align-items-center ml-auto text-nowrap">
-                                <label class="mb-0 mr-2 flex-shrink-0" for="{{ form.sort_by.auto_id }}">{{ form.sort_by.label }}</label>
-                                {% render_field form.sort_by class+="form-control w-auto" %}
-                            </div>
-                        {% endif %}
-                    </div>
-                </form>
-                <ol class="row list-unstyled pl-0">
+                <ol class="catalogue-product-grid row list-unstyled pl-0">
                     {% block products %}
                       {% for product in products %}
-                          <li class="col-sm-6 col-md-4 col-lg-3">{% render_product product.object %}</li>
+                          <li class="col-sm-6 col-md-6 col-lg-4">{% render_product product.object %}</li>
                       {% endfor %}
                     {% endblock %}
                 </ol>
+                <div class="catalogue-pagination-bottom mt-3">
+                    {% include "oscar/catalogue/partials/pagination.html" %}
+                </div>
             </div>
         </section>
     {% else %}

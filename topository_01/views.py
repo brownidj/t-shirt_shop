@@ -564,4 +564,14 @@ def add_configured_tshirt(request, product_id):
     else:
         request.basket.add_product(child, quantity=1)
         messages.success(request, f"{child.title} was added to your basket.")
-    return redirect("basket:summary")
+
+    # Keep the shopper on the design page after adding a shirt. The cart is
+    # opened explicitly through the cart icon in the primary navigation.
+    selections = {
+        "style": style_code,
+        "colour": colour,
+        "size": size,
+    }
+    if basket_line_id:
+        selections["line"] = basket_line_id
+    return redirect(f"{design.get_absolute_url()}?{urlencode(selections)}")

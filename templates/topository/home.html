@@ -6,22 +6,12 @@
 
 {% block navigation %}
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#homeNavigation" aria-controls="homeNavigation" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="homeNavigation">
-            <ul class="navbar-nav mr-auto">
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'catalogue:index' %}">{% trans "Browse store" %}</a>
-                </li>
-            </ul>
-            <a class="btn btn-outline-light mr-2" href="{% url 'request_design' %}">{% trans "Request a design" %}</a>
-            {% if user.is_authenticated %}
-                <a class="btn btn-outline-light home-login-button" href="{% url 'customer:summary' %}">{% trans "Account" %}</a>
-            {% else %}
-                <a class="btn btn-outline-light home-login-button" href="{% url 'customer:login' %}">{% trans "Login" %}</a>
-            {% endif %}
-        </div>
+        <a class="btn btn-outline-light" href="{% url 'catalogue:index' %}">{% trans "Browse store" %}</a>
+        {% if user.is_authenticated %}
+            <a class="btn btn-outline-light ml-auto" href="{% url 'customer:summary' %}">{% trans "Account" %}</a>
+        {% else %}
+            <a class="btn btn-outline-light ml-auto" href="{% url 'customer:login' %}">{% trans "Login" %}</a>
+        {% endif %}
     </nav>
 {% endblock %}
 
@@ -29,7 +19,6 @@
     {% if slides %}
         <section class="artwork-slideshow" aria-label="Featured artwork">
             <p class="slideshow-title">Custom designs</p>
-            <img class="slideshow-logo" src="/media/images/logo/green_topository_logo_Futura_inverted.png" alt="Topository">
             {% for slide in slides %}
                 <figure class="artwork-slide{% if forloop.first %} is-active{% endif %}">
                     <a class="artwork-slide-link" href="{{ slide.product_url }}" aria-label="View {{ slide.alt }}">
@@ -71,21 +60,20 @@
             transform: translate(-39px, 20px);
         }
         .header .h1 > small { margin: 0 0 0 auto; text-align: right; transform: translateY(20px); }
-        .artwork-slideshow { position: relative; height: calc(70vh - 200px); background: #111; overflow: hidden; }
+        .artwork-slideshow { position: relative; box-sizing: border-box; height: calc(70vh - 136px); padding-top: 64px; background: #111; overflow: hidden; }
         .slideshow-title {
             position: absolute;
-            bottom: 1rem;
+            top: calc(1rem - 6px);
             left: 1rem;
             z-index: 2;
             margin: 0;
             color: #fff;
             font-family: Avenir, sans-serif;
-            font-size: 36pt;
+            font-size: 28pt;
             font-weight: 400;
             line-height: 1.1;
         }
-        .slideshow-logo { position: absolute; bottom: 1rem; right: 1rem; z-index: 2; width: min(12rem, 25%); height: auto; }
-        .artwork-slide { display: none; margin: 0; height: 70vh; align-items: center; justify-content: center; transform: translateY(-120px); }
+        .artwork-slide { display: none; margin: 0; height: 100%; align-items: center; justify-content: center; }
         .artwork-slide.is-active { display: flex; }
         .artwork-slide-link { display: flex; height: 100%; width: 100%; align-items: center; justify-content: center; }
         .artwork-slide img { max-width: 100%; max-height: 70vh; object-fit: contain; }
@@ -94,16 +82,28 @@
         .slideshow-control.previous { left: .5rem; }
         .slideshow-control.next { right: .5rem; }
         @media (max-width: 1100px) {
-            .artwork-slideshow { height: clamp(360px, calc(70vh - 200px), 700px); }
-            .slideshow-title, .slideshow-logo { bottom: 1.25rem; }
+            .artwork-slideshow { height: clamp(424px, calc(70vh - 136px), 764px); }
+            .slideshow-title { top: calc(1.25rem - 6px); }
         }
         @media (max-width: 768px) {
-            .artwork-slideshow { height: clamp(360px, 60vh, 560px); }
+            .artwork-slideshow { height: clamp(424px, calc(60vh + 64px), 624px); }
             .artwork-slide { height: 100%; transform: none; }
             .artwork-slide img { max-height: 100%; }
-            .slideshow-title { left: 1rem; font-size: clamp(2rem, 8vw, 3rem); }
-            .slideshow-logo { right: 1rem; width: min(10rem, 35%); }
+            .slideshow-title { left: 1rem; font-size: clamp(1.333rem, 8vw, 2.333rem); }
             .slideshow-control { min-width: 44px; min-height: 44px; padding: .5rem .75rem; }
+        }
+        /* Narrow phones can report a wider CSS viewport in device emulation. */
+        @media (max-width: 576px), (max-aspect-ratio: 2 / 3) {
+            .artwork-slideshow { height: auto; padding-top: 66px; }
+            .artwork-slide,
+            .artwork-slide-link { height: auto; }
+            .slideshow-title { font-size: 24pt; }
+            .artwork-slide-link { align-items: flex-start; }
+            .artwork-slide img {
+                display: block;
+                width: 100%;
+                max-height: none;
+            }
         }
     </style>
 {% endblock %}

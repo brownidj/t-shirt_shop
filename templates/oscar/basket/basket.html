@@ -3,9 +3,134 @@
 {% block title %}{% trans "Basket" %} | {{ block.super }}{% endblock %}
 {% block mini_basket %}{% endblock %}
 {% block headertext %}{% trans "Basket" %}{% endblock %}
+{% block extrastyles %}
+    {{ block.super }}
+    <style>
+        /* The line total remains; the separate unit-price column is omitted. */
+        .basket-title .col-md-1,
+        #basket_formset .basket-items .row > .col-md-1 {
+            display: none;
+        }
+
+        #basket_formset .checkout-quantity {
+            width: 5rem;
+        }
+
+        #basket_formset .basket-items .row {
+            display: grid;
+            grid-template-columns: 7rem minmax(0, 1fr);
+            grid-template-areas:
+                "image details"
+                "quantity total";
+            gap: .75rem 1rem;
+            align-items: start;
+        }
+
+        #basket_formset .basket-items .row > [class*="col-md-"] {
+            width: auto;
+            min-width: 0;
+            max-width: none;
+        }
+
+        #basket_formset .basket-items .row > .col-md-2:first-child {
+            grid-area: image;
+        }
+
+        #basket_formset .basket-items .row > .col-md-4 {
+            grid-area: details;
+        }
+
+        #basket_formset .basket-items .row > .col-md-3 {
+            grid-area: quantity;
+        }
+
+        #basket_formset .basket-items .row > .col-md-2:last-child {
+            grid-area: total;
+            max-width: none;
+            padding-top: .25rem;
+        }
+
+        @media (min-width: 768px) {
+            .basket-title .col-md-2:last-child {
+                flex: 0 0 25%;
+                max-width: 25%;
+            }
+        }
+
+        @media (min-width: 576px) {
+            #basket_formset .basket-items .row {
+                grid-template-columns: clamp(8rem, 22vw, 13rem) minmax(0, 1fr) auto;
+                grid-template-areas:
+                    "image details details"
+                    "image quantity total";
+            }
+        }
+    </style>
+{% endblock %}
 {% block content %}
     {% include 'oscar/basket/partials/basket_content.html' %}
-    {% if not basket.is_empty %}
-        <form method="post" action="{% url 'stripe_checkout' %}" class="text-right mt-3">{% csrf_token %}<button type="submit" class="btn btn-success btn-lg">{% trans "Secure checkout" %}</button></form>
-    {% endif %}
+{% endblock %}
+{% block extrascripts %}
+    {{ block.super }}
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            var basketForm = document.getElementById("basket_formset");
+            if (!basketForm) return;
+
+            basketForm.querySelectorAll('[data-behaviours~="remove"]').forEach(function (removeLink) {
+                removeLink.addEventListener("click", function (event) {
+                    event.preventDefault();
+                    event.stopImmediatePropagation();
+
+                    var index = removeLink.getAttribute("data-id");
+                    var deleteField = document.getElementById("id_form-" + index + "-DELETE");
+                    if (!deleteField) return;
+
+                    deleteField.checked = true;
+                    if (typeof basketForm.requestSubmit === "function") {
+                        basketForm.requestSubmit();
+                    } else {
+                        basketForm.submit();
+                    }
+                }, true);
+            });
+
+            basketForm.querySelectorAll(".basket-items .row").forEach(function (itemRow) {
+                var imageColumn = itemRow.querySelector(".col-md-2:first-child");
+                var availability = itemRow.querySelector(".availability");
+                if (imageColumn && availability) {
+                    imageColumn.appendChild(availability);
+                }
+            });
+
+            var checkoutButton = document.querySelector(
+                "#content_inner .formactions a.btn.btn-lg.btn-primary.btn-block"
+            );
+            if (checkoutButton) {
+                checkoutButton.textContent = "{% trans 'Checkout' %}";
+            }
+
+            var basketTotals = document.getElementById("basket_totals");
+            if (!basketTotals) return;
+
+            var totalsColumn = basketTotals.closest(".col-sm-6");
+            if (totalsColumn) {
+                var totalsHeading = totalsColumn.querySelector(".sub-header");
+                if (totalsHeading) totalsHeading.style.display = "none";
+            }
+
+            basketTotals.querySelectorAll("h3").forEach(function (heading) {
+                var label = heading.textContent.trim();
+                if (label === "{% trans 'Basket' %}" || label === "{% trans 'Shipping' %}") {
+                    heading.closest("tr").style.display = "none";
+                }
+            });
+
+            basketTotals.querySelectorAll("th.total").forEach(function (cell) {
+                if (cell.textContent.trim() === "{% trans 'No shipping required' %}") {
+                    cell.textContent = "{% trans 'Shipping' %}";
+                }
+            });
+        });
+    </script>
 {% endblock %}

@@ -9,42 +9,20 @@
 {% block breadcrumbs %}
     {% design_navigation as design_navigation %}
     <nav aria-label="breadcrumb">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{{ homepage_url }}">{% trans "Home" %}</a></li>
+        <ol class="breadcrumb product-breadcrumb">
+            <li class="breadcrumb-item breadcrumb-path">
+                <a href="{{ homepage_url }}">{% trans "Home" %}</a>
             {% with category=product.get_categories.first %}
                 {% for category_ancestor in category.get_ancestors_and_self %}
-                    <li class="breadcrumb-item"><a href="{{ category_ancestor.get_absolute_url }}">{{ category_ancestor.name }}</a></li>
+                    <span class="breadcrumb-path__separator" aria-hidden="true">/</span>
+                    <a href="{{ category_ancestor.get_absolute_url }}">{{ category_ancestor.name }}</a>
                 {% endfor %}
             {% endwith %}
-            <li class="breadcrumb-item active" aria-current="page">{{ product.get_title }}</li>
-            {% if design_navigation.category %}
-                <li class="ml-auto d-flex align-items-center design-navigation" aria-label="{% trans 'Beginning or previous design' %}">
-                    {% if design_navigation.first %}
-                        <a href="{{ design_navigation.first.get_absolute_url }}{% if request.GET.line %}?line={{ request.GET.line }}{% endif %}" aria-label="{% trans 'First design in category' %}" title="{% trans 'First design in category' %}"><i class="fas fa-angle-double-left" aria-hidden="true"></i></a>
-                    {% else %}
-                        <span class="design-navigation__disabled" aria-hidden="true"><i class="fas fa-angle-double-left"></i></span>
-                    {% endif %}
-                    {% if design_navigation.previous %}
-                        <a href="{{ design_navigation.previous.get_absolute_url }}{% if request.GET.line %}?line={{ request.GET.line }}{% endif %}" aria-label="{% trans 'Previous design' %}" title="{% trans 'Previous design' %}"><i class="fas fa-angle-left" aria-hidden="true"></i></a>
-                    {% else %}
-                        <span class="design-navigation__disabled" aria-hidden="true"><i class="fas fa-angle-left"></i></span>
-                    {% endif %}
-                </li>
-                {% if product.product_class.name == "Designs" %}
-                    <li id="variant-status" class="d-flex align-items-center text-muted" aria-live="polite"></li>
-                {% endif %}
-                <li class="d-flex align-items-center design-navigation" aria-label="{% trans 'Next or final design' %}">
-                    {% if design_navigation.next %}
-                        <a href="{{ design_navigation.next.get_absolute_url }}{% if request.GET.line %}?line={{ request.GET.line }}{% endif %}" aria-label="{% trans 'Next design' %}" title="{% trans 'Next design' %}"><i class="fas fa-angle-right" aria-hidden="true"></i></a>
-                    {% else %}
-                        <span class="design-navigation__disabled" aria-hidden="true"><i class="fas fa-angle-right"></i></span>
-                    {% endif %}
-                    {% if design_navigation.last %}
-                        <a href="{{ design_navigation.last.get_absolute_url }}{% if request.GET.line %}?line={{ request.GET.line }}{% endif %}" aria-label="{% trans 'Last design in category' %}" title="{% trans 'Last design in category' %}"><i class="fas fa-angle-double-right" aria-hidden="true"></i></a>
-                    {% else %}
-                        <span class="design-navigation__disabled" aria-hidden="true"><i class="fas fa-angle-double-right"></i></span>
-                    {% endif %}
-                </li>
+                <span class="breadcrumb-path__separator" aria-hidden="true">/</span>
+                <span aria-current="page">{{ product.get_title }}</span>
+            </li>
+            {% if product.product_class.name == "Designs" %}
+                <li id="variant-status" class="ml-auto d-flex align-items-center text-muted" aria-live="polite"></li>
             {% endif %}
         </ol>
     </nav>
@@ -65,9 +43,49 @@
             white-space: nowrap;
         }
 
-        .design-navigation { gap: .75rem; font-size: 1rem; line-height: 1; }
-        .design-navigation a, .design-navigation__disabled { color: #007bff; font-weight: 700; text-decoration: none; }
+        .breadcrumb-path { min-width: 0; }
+        .breadcrumb-path__separator { padding: 0 .5rem; color: #6c757d; }
         #variant-status { margin: 0 6px; font-size: 1rem; line-height: 1; text-align: right; white-space: nowrap; }
+        #variant-status::before { display: none; }
+
+        @media (max-width: 639.98px) {
+            .product-breadcrumb { flex-wrap: wrap; }
+            .product-breadcrumb .breadcrumb-path {
+                flex: 0 1 100%;
+                max-width: 100%;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+            .product-breadcrumb #variant-status {
+                flex: 0 0 100%;
+                max-width: 100%;
+                margin: .35rem 0 0 !important;
+                text-align: left;
+            }
+        }
+        .variant-panel-preview {
+            position: relative;
+            display: inline-block;
+            max-width: 100%;
+            clear: both;
+        }
+        .variant-panel-preview img { display: block; }
+        #variant-price {
+            position: absolute;
+            right: 0;
+            bottom: 0;
+            z-index: 1;
+            margin: 0;
+            padding: .35rem .55rem;
+            background: #000000;
+            color: #ffffff;
+            font-size: 1rem;
+            font-weight: 600;
+            line-height: 1.2;
+            white-space: nowrap;
+            pointer-events: none;
+        }
         .tshirt-style-heading { display: flex; align-items: baseline; gap: .5rem; white-space: nowrap; }
         .tshirt-style-heading h2, .tshirt-style-heading h3 { margin-bottom: .5rem; }
 
@@ -85,6 +103,29 @@
             background: transparent;
             cursor: zoom-in;
         }
+
+        .design-artwork { position: relative; }
+        .design-artwork__nav {
+            position: absolute;
+            top: 50%;
+            z-index: 1;
+            display: grid;
+            width: 2.1rem;
+            height: 2.1rem;
+            place-items: center;
+            transform: translateY(-50%);
+            border-radius: 50%;
+            background: rgba(0, 0, 0, .6);
+            color: #fff;
+            font-size: 1.4rem;
+            line-height: 1;
+            text-decoration: none;
+        }
+
+        .design-artwork__nav:hover,
+        .design-artwork__nav:focus { background: rgba(0, 0, 0, .82); color: #fff; }
+        .design-artwork__nav--previous { left: .75rem; }
+        .design-artwork__nav--next { right: .75rem; }
 
         .artwork-lightbox {
             position: fixed;
@@ -142,15 +183,32 @@
 {% endblock %}
 
 {% block content %}
+    {% design_navigation as design_navigation %}
     <div class="row">
         <div class="col-md-5 mb-3">
             {% if product.primary_image %}
-                <button type="button" class="artwork-image-trigger" data-artwork-lightbox-open
-                        aria-label="{% trans 'View a larger version of this artwork' %}">
-                    <img src="{{ product.primary_image.original.url }}"
-                         alt="{{ product.get_title }}"
-                         class="img-fluid">
-                </button>
+                <div class="design-artwork">
+                    <button type="button" class="artwork-image-trigger" data-artwork-lightbox-open
+                            aria-label="{% trans 'View a larger version of this artwork' %}">
+                        <img src="{{ product.primary_image.original.url }}"
+                             alt="{{ product.get_title }}"
+                             class="img-fluid">
+                    </button>
+                    {% if design_navigation.previous %}
+                        <a class="design-artwork__nav design-artwork__nav--previous"
+                           href="{{ design_navigation.previous.get_absolute_url }}{% if request.GET.line %}?line={{ request.GET.line }}{% endif %}"
+                           aria-label="{% trans 'Previous design in this category' %}">
+                            <i class="fas fa-angle-left" aria-hidden="true"></i>
+                        </a>
+                    {% endif %}
+                    {% if design_navigation.next %}
+                        <a class="design-artwork__nav design-artwork__nav--next"
+                           href="{{ design_navigation.next.get_absolute_url }}{% if request.GET.line %}?line={{ request.GET.line }}{% endif %}"
+                           aria-label="{% trans 'Next design in this category' %}">
+                            <i class="fas fa-angle-right" aria-hidden="true"></i>
+                        </a>
+                    {% endif %}
+                </div>
             {% endif %}
 
             {# Variant details panel lives under the design image #}
@@ -160,10 +218,10 @@
                         <button id="update-cart" form="tshirt-add-form" type="submit" class="btn btn-primary float-right d-none" disabled>
                             {% trans "Update cart" %}
                         </button>
-                        <h3 id="variant-panel-title" class="h5 mb-2"></h3>
-                        <p id="variant-panel-price" class="h5 mb-2"></p>
-                        <p id="variant-panel-meta" class="mb-2"></p>
-                        <img id="variant-panel-image" class="img-fluid" alt="">
+                        <div class="variant-panel-preview">
+                            <img id="variant-panel-image" class="img-fluid" alt="">
+                            <p id="variant-price" aria-live="polite"></p>
+                        </div>
                     </div>
                 </div>
             {% endif %}
@@ -182,8 +240,7 @@
 
                     <div class="mb-3">
                         <div class="tshirt-style-heading mt-2">
-                            <h2 class="h4">{% trans "Choose your T-shirt" %}</h2>
-                            <h3 class="h5">{% trans "Style" %}</h3>
+                            <h2 class="h4">{% trans "Choose your style, colour and size" %}</h2>
                         </div>
                         <div id="style-options" class="d-flex flex-wrap gap-2">
                             {# Style buttons will be populated by JS #}
@@ -248,6 +305,7 @@
                             var sizeContainer   = document.getElementById("size-options");
                             var status          = document.getElementById("variant-status");
                             var colourWarning   = document.getElementById("style-colour-warning");
+                            var priceDisplay    = document.getElementById("variant-price");
                             var addToCartButton = document.getElementById("add-to-cart");
                             var selectedStyleInput = document.getElementById("selected-style");
                             var selectedColourInput = document.getElementById("selected-colour");
@@ -255,67 +313,17 @@
                             var selectedBasketLineInput = document.getElementById("selected-basket-line");
                             var updateCartButton = document.getElementById("update-cart");
 
-                            // New: panel elements
                             var panel       = document.getElementById("variant-panel");
-                            var panelTitle  = document.getElementById("variant-panel-title");
-                            var panelPrice  = document.getElementById("variant-panel-price");
-                            var panelMeta   = document.getElementById("variant-panel-meta");
                             var panelImg    = document.getElementById("variant-panel-image");
 
-                            {#function updateVariantPanel(v) {#}
-                            {#    if (!panel) return;#}
-                            {##}
-                            {#    if (!v) {#}
-                            {#        panel.classList.add("d-none");#}
-                            {#        return;#}
-                            {#    }#}
-                            {##}
-                            {#    // Text bits#}
-                            {#    panelTitle.textContent = v.title || "";#}
-                            {#    panelPrice.textContent = v.price || "";#}
-                            {#    panelMeta.textContent = [#}
-                            {#        v.style_name || v.style_code || "",#}
-                            {#        v.colour || "",#}
-                            {#        v.size || ""#}
-                            {#    ].filter(Boolean).join(" / ");#}
-                            {##}
-                            {#    // --- build image filename from STYLE + COLOUR ONLY ---#}
-                            {#    var styleCode = (v.style_code || "").trim();    // e.g. "AS-5001"#}
-                            {#    var colourSlug = (v.colour || "")#}
-                            {#        .trim()#}
-                            {#        .toLowerCase()#}
-                            {#        .replace(/\s+/g, "_");                      // "Autumn" → "autumn"#}
-                            {##}
-                            {#    if (styleCode && colourSlug) {#}
-                            {#        // assuming files live in: static/topository/tshirts/AS-5001/t-shirt_AS-5001_autumn.png#}
-                            {#        var basePath = "{% static 'topository/tshirts/' %}";#}
-                            {#        var filename = "t-shirt_" + styleCode + "_" + colourSlug + ".png";#}
-                            {#        var url = basePath + styleCode + "/" + filename;#}
-                            {##}
-                            {#        panelImg.src = url;#}
-                            {#        panelImg.alt = v.title + " – " + v.colour;#}
-                            {#        panelImg.classList.remove("d-none");#}
-                            {#    } else {#}
-                            {#        panelImg.removeAttribute("src");#}
-                            {#        panelImg.classList.add("d-none");#}
-                            {#    }#}
-                            {##}
-                            {#    panel.classList.remove("d-none");#}
-                            {# }#}
-
-                            // expects a <div id="tshirt-variant-panel"> with child elements
-                            // #variant-title, #variant-price, #variant-meta, #variant-image
                             function updateVariantPanel(v) {
-                                if (!panel || !panelTitle || !panelPrice || !panelMeta || !panelImg) {
+                                if (!panel || !panelImg) {
                                     return;
                                 }
 
                                 // Nothing selected / no matching variant → hide the card
                                 if (!v) {
                                     panel.classList.add("d-none");
-                                    panelTitle.textContent = "";
-                                    panelPrice.textContent = "";
-                                    panelMeta.textContent = "";
                                     panelImg.removeAttribute("src");
                                     panelImg.alt = "";
                                     return;
@@ -324,9 +332,6 @@
                                 // Show the card
                                 panel.classList.remove("d-none");
                                 var styleName = stylesMap[v.style_code] || v.style_code || "";
-                                panelTitle.textContent = styleName;
-                                panelPrice.textContent = v.price || "";
-                                panelMeta.textContent = [v.colour, v.size].filter(Boolean).join(" / ");
 
                                 // The preview is rendered from the selected options.  A database
                                 // child variant is not needed until a shopper actually buys it.
@@ -461,6 +466,26 @@
                                 colourWarning.classList.add("d-none");
                             }
 
+                            function selectStyle(styleCode) {
+                                var previousColour = selectedColour;
+                                selectedStyle = styleCode;
+                                var changes = normaliseSelections();
+
+                                if (changes.colourChanged && colourWarning) {
+                                    colourWarning.textContent = previousColour +
+                                        " is not available for this style. Please choose another colour.";
+                                    colourWarning.classList.remove("d-none");
+                                } else {
+                                    clearColourWarning();
+                                }
+
+                                saveSelections();
+                                renderStyles();
+                                renderColours();
+                                renderSizes();
+                                updateStatusAndPanel();
+                            }
+
 
                             // --------- RENDER STYLES -----------------
                             function renderStyles() {
@@ -476,28 +501,7 @@
                                     btn.setAttribute("data-style-code", s.code);
 
                                     btn.addEventListener("click", function () {
-                                        var previousColour = selectedColour;
-                                        selectedStyle = s.code;
-
-                                        // visual selection state
-                                        styleContainer.querySelectorAll(".style-option").forEach(function (el) {
-                                            el.classList.remove("active");
-                                        });
-                                        btn.classList.add("active");
-                                        var changes = normaliseSelections();
-                                        if (changes.colourChanged) {
-                                            if (colourWarning) {
-                                                colourWarning.textContent = previousColour +
-                                                    " is not available for this style. Please choose another colour.";
-                                                colourWarning.classList.remove("d-none");
-                                            }
-                                        } else {
-                                            clearColourWarning();
-                                        }
-                                        saveSelections();
-                                        renderColours();
-                                        renderSizes();
-                                        updateStatusAndPanel();
+                                        selectStyle(s.code);
                                     });
 
                                     styleContainer.appendChild(btn);
@@ -653,6 +657,7 @@
                                 // Not enough info selected yet
                                 if ((needStyle && !selectedStyle) || !selectedColour || !selectedSize) {
                                     status.textContent = "";
+                                    if (priceDisplay) priceDisplay.textContent = "";
                                     updateVariantPanel(null);   // hide the panel
                                     addToCartButton.disabled = true;
                                     if (updateCartButton) updateCartButton.disabled = true;
@@ -661,9 +666,8 @@
 
                                 if (v) {
                                     var styleName = stylesMap[v.style_code] || v.style_code;
-                                    status.textContent = v.price
-                                        ? styleName + " / " + v.colour + " / " + v.size + " — " + v.price
-                                        : styleName + " / " + v.colour + " / " + v.size;
+                                    status.textContent = styleName + " / " + v.colour + " / " + v.size;
+                                    if (priceDisplay) priceDisplay.textContent = v.price || "";
 
                                     // Show the preview card (image only)
                                     updateVariantPanel(v);
@@ -674,6 +678,7 @@
                                     if (updateCartButton) updateCartButton.disabled = false;
                                 } else {
                                     status.textContent = "That combination is not available.";
+                                    if (priceDisplay) priceDisplay.textContent = "";
                                     updateVariantPanel(null);
                                     addToCartButton.disabled = true;
                                     if (updateCartButton) updateCartButton.disabled = true;

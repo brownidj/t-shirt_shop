@@ -11,16 +11,18 @@
 {% endblock %}
 
 {% block header %}
-    <div class="page-header">
-        {% if user.is_staff %}
-            <a class="float-right d-none d-md-block" href="{% url 'dashboard:catalogue-category-update' pk=category.id %}">
-                <small><i class="fas fa-pencil-alt"></i> {% trans "Edit this category" %}</small>
-            </a>
-        {% endif %}
-        <div class="d-flex justify-content-between align-items-baseline">
-            <h1>{% block headertext %}{{ category.name }}{% endblock %}</h1>
-            <div class="text-muted text-right">
+    <div class="page-header catalogue-results-header">
+        <div class="d-flex align-items-center">
+            <div class="text-muted">
                 {% include "oscar/catalogue/partials/result_summary.html" %}
+            </div>
+            {% if user.is_staff %}
+                <a class="ml-3 d-none d-md-block" href="{% url 'dashboard:catalogue-category-update' pk=category.id %}">
+                    <small><i class="fas fa-pencil-alt"></i> {% trans "Edit this category" %}</small>
+                </a>
+            {% endif %}
+            <div class="ml-auto">
+                {% include "oscar/catalogue/partials/pagination.html" %}
             </div>
         </div>
     </div>
