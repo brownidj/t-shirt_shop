@@ -83,6 +83,8 @@
         .slideshow-control.next { right: .5rem; }
         @media (max-width: 1100px) {
             .artwork-slideshow { height: clamp(424px, calc(70vh - 136px), 764px); }
+            /* Keep the artwork clear of both slideshow edges on tablet/phone. */
+            .artwork-slide-link { width: calc(100% - 12px); }
             .slideshow-title { top: calc(1.25rem - 6px); }
         }
         @media (max-width: 768px) {
