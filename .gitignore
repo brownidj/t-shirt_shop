@@ -22,3 +22,6 @@ data/
 
 # Local release/archive files
 topository-shop.zip
+
+# Machine-specific Spaceship connection wrapper
+scripts/deploy_spaceship.zsh

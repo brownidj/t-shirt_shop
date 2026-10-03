@@ -82,13 +82,16 @@
         .slideshow-control.previous { left: .5rem; }
         .slideshow-control.next { right: .5rem; }
         @media (max-width: 1100px) {
-            .artwork-slideshow { height: clamp(424px, calc(70vh - 136px), 764px); }
-            /* Keep the artwork clear of both slideshow edges on tablet/phone. */
-            .artwork-slide-link { width: calc(100% - 12px); }
+            .artwork-slideshow {
+                height: clamp(436px, calc(70vh - 124px), 776px);
+                padding-bottom: 12px;
+            }
+            /* Keep 14px of black space at each slideshow edge on tablet/phone. */
+            .artwork-slide-link { width: calc(100% - 28px); }
             .slideshow-title { top: calc(1.25rem - 6px); }
         }
         @media (max-width: 768px) {
-            .artwork-slideshow { height: clamp(424px, calc(60vh + 64px), 624px); }
+            .artwork-slideshow { height: clamp(436px, calc(60vh + 76px), 636px); }
             .artwork-slide { height: 100%; transform: none; }
             .artwork-slide img { max-height: 100%; }
             .slideshow-title { left: 1rem; font-size: clamp(1.333rem, 8vw, 2.333rem); }
