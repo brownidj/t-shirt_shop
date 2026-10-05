@@ -75,7 +75,7 @@ class BasketWishlistTransferTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, self.line.description)
 
-    def test_add_to_cart_keeps_the_saved_item_in_the_wishlist(self):
+    def test_add_to_cart_removes_the_saved_item_from_the_wishlist(self):
         self.configure_line_product()
         wishlist = self.user.wishlists.create()
         wishlist.add(self.line.product)
@@ -97,7 +97,7 @@ class BasketWishlistTransferTests(TestCase):
 
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response["Location"], reverse("wishlist"))
-        self.assertTrue(wishlist.lines.filter(pk=wishlist_line.pk).exists())
+        self.assertFalse(wishlist.lines.filter(pk=wishlist_line.pk).exists())
         self.assertEqual(
             self.basket.lines.get(product=self.line.product).quantity,
             wishlist_line.quantity,

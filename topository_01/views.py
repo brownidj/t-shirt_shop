@@ -438,15 +438,19 @@ def wishlist_view(request):
 @login_required
 @require_POST
 def add_wishlist_line_to_cart(request, line_id):
-    """Add a saved, fully configured T-shirt to the current basket."""
-    wishlist_line = get_object_or_404(
-        WishlistLine.objects.select_related("product", "wishlist"),
-        pk=line_id,
-        wishlist__owner=request.user,
-    )
-    product = wishlist_line.product
-    request.basket.add_product(product, quantity=wishlist_line.quantity)
-    messages.success(request, f"{product.title} was added to your cart.")
+    """Transfer a saved T-shirt to the current basket."""
+    with transaction.atomic():
+        wishlist_line = get_object_or_404(
+            WishlistLine.objects.select_related("product", "wishlist").select_for_update(),
+            pk=line_id,
+            wishlist__owner=request.user,
+        )
+        product = wishlist_line.product
+        quantity = wishlist_line.quantity
+        wishlist_line.delete()
+        request.basket.add_product(product, quantity=quantity)
+
+    messages.success(request, f"{product.title} was moved to your cart.")
     return redirect("wishlist")
 
 
