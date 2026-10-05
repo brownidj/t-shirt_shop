@@ -252,12 +252,11 @@
                         </a>
                     {% endif %}
                     {% if user.is_authenticated %}
-                        <form class="d-inline" method="post" action="{% url 'customer:wishlists-add-product' product.pk %}">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-outline-secondary">
-                                {% trans "Add to wishlist" %}
-                            </button>
-                        </form>
+                        <button id="add-to-wishlist" type="submit" form="tshirt-add-form"
+                                formaction="{% url 'configured_tshirt_wishlist_add' product.pk %}"
+                                class="btn btn-outline-secondary" disabled>
+                            {% trans "Add to wishlist" %}
+                        </button>
                         <a class="btn btn-outline-secondary ml-auto" href="{% url 'wishlist' %}">
                             {% trans "View wishlist" %}
                         </a>
@@ -353,6 +352,7 @@
                             var colourWarning   = document.getElementById("style-colour-warning");
                             var priceDisplay    = document.getElementById("variant-price");
                             var addToCartButton = document.getElementById("add-to-cart");
+                            var addToWishlistButton = document.getElementById("add-to-wishlist");
                             var selectedStyleInput = document.getElementById("selected-style");
                             var selectedColourInput = document.getElementById("selected-colour");
                             var selectedSizeInput = document.getElementById("selected-size");
@@ -721,6 +721,7 @@
                                     if (priceDisplay) priceDisplay.textContent = "";
                                     updateVariantPanel(null);   // hide the panel
                                     addToCartButton.disabled = true;
+                                    if (addToWishlistButton) addToWishlistButton.disabled = true;
                                     return;
                                 }
 
@@ -735,11 +736,13 @@
                                     selectedColourInput.value = v.colour;
                                     selectedSizeInput.value = v.size;
                                     addToCartButton.disabled = !!requestedBasketLine;
+                                    if (addToWishlistButton) addToWishlistButton.disabled = false;
                                 } else {
                                     status.textContent = "That combination is not available.";
                                     if (priceDisplay) priceDisplay.textContent = "";
                                     updateVariantPanel(null);
                                     addToCartButton.disabled = true;
+                                    if (addToWishlistButton) addToWishlistButton.disabled = true;
                                 }
                             }
 

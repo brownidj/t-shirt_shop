@@ -668,7 +668,7 @@ def tshirt_preview(request, product_id):
 
 
 @require_POST
-def add_configured_tshirt(request, product_id):
+def add_configured_tshirt(request, product_id, *, save_to_wishlist=False):
     """Create a requested T-shirt variant only when it is added to a basket."""
     design = get_object_or_404(Product, pk=product_id, product_class__name="Designs")
     style_code = request.POST.get("style", "").strip()
@@ -774,6 +774,14 @@ def add_configured_tshirt(request, product_id):
             },
         )
 
+    if save_to_wishlist:
+        wishlist = request.user.wishlists.order_by("date_created").first()
+        if wishlist is None:
+            wishlist = request.user.wishlists.create()
+        wishlist.add(child)
+        messages.success(request, f"{child.title} was added to your wishlist.")
+        return redirect("wishlist")
+
     basket_line = None
     if basket_line_id.isdigit():
         basket_line = request.basket.lines.filter(pk=int(basket_line_id)).first()
@@ -830,3 +838,10 @@ def add_configured_tshirt(request, product_id):
     if basket_line_id:
         selections["line"] = basket_line_id
     return redirect(f"{design.get_absolute_url()}?{urlencode(selections)}")
+
+
+@login_required
+@require_POST
+def add_configured_tshirt_to_wishlist(request, product_id):
+    """Save the current default or selected T-shirt variant to a wishlist."""
+    return add_configured_tshirt(request, product_id, save_to_wishlist=True)

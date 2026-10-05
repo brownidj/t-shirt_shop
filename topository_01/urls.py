@@ -41,6 +41,11 @@ urlpatterns = [
         views.add_configured_tshirt,
         name="configured_tshirt_add",
     ),
+    path(
+        "configured-tshirt/<int:product_id>/add-to-wishlist/",
+        views.add_configured_tshirt_to_wishlist,
+        name="configured_tshirt_wishlist_add",
+    ),
     re_path(
         r"^catalogue/(?P<product_slug>[\w-]*)_(?P<pk>\d+)/$",
         views.configured_product_detail,
