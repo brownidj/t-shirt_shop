@@ -209,6 +209,18 @@
                         </a>
                     {% endif %}
                 </div>
+            {% endif %}
+
+            {# Variant details panel lives under the design image #}
+            {% if product.product_class.name == "Designs" %}
+                <div id="variant-panel" class="card mt-3 d-none">
+                    <div class="card-body">
+                        <div class="variant-panel-preview">
+                            <img id="variant-panel-image" class="img-fluid" alt="">
+                            <p id="variant-price" aria-live="polite"></p>
+                        </div>
+                    </div>
+                </div>
                 <div class="mt-3">
                     {% if user.is_authenticated %}
                         <form method="post" action="{% url 'customer:wishlists-add-product' product.pk %}">
@@ -228,18 +240,6 @@
                             {% trans "to save this design." %}
                         </small>
                     {% endif %}
-                </div>
-            {% endif %}
-
-            {# Variant details panel lives under the design image #}
-            {% if product.product_class.name == "Designs" %}
-                <div id="variant-panel" class="card mt-3 d-none">
-                    <div class="card-body">
-                        <div class="variant-panel-preview">
-                            <img id="variant-panel-image" class="img-fluid" alt="">
-                            <p id="variant-price" aria-live="polite"></p>
-                        </div>
-                    </div>
                 </div>
             {% endif %}
         </div>

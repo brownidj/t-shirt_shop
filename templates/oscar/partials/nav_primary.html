@@ -10,7 +10,7 @@
         <div class="d-flex align-items-center ml-auto">
             {% if user.is_authenticated %}
                 <a class="btn btn-outline-light mr-2" href="{% url 'customer:summary' %}">
-                    {% trans "Account" %}
+                    {{ user.get_full_name|default:user.email }}
                     {% if num_unread_notifications > 0 %}
                         <span class="badge badge-warning">{{ num_unread_notifications }}</span>
                     {% endif %}
