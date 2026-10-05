@@ -1,8 +1,17 @@
 from django import forms
 from django.utils.translation import gettext_lazy as _
-from oscar.apps.customer.forms import EmailUserCreationForm as OscarEmailUserCreationForm
+from oscar.apps.customer.forms import (
+    EmailAuthenticationForm as OscarEmailAuthenticationForm,
+    EmailUserCreationForm as OscarEmailUserCreationForm,
+)
 
 from .models import DesignRequest, MarketingConsent
+
+
+class UsernameOrEmailAuthenticationForm(OscarEmailAuthenticationForm):
+    """Accept either a username or an email address at sign-in."""
+
+    username = forms.CharField(label=_("Username or email"), max_length=254)
 
 
 class DesignRequestForm(forms.ModelForm):

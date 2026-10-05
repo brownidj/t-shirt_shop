@@ -39,7 +39,11 @@ from oscar.core.loading import get_model
 from PIL import Image, ImageChops
 from django.conf import settings
 
-from .forms import CustomerRegistrationForm, DesignRequestForm
+from .forms import (
+    CustomerRegistrationForm,
+    DesignRequestForm,
+    UsernameOrEmailAuthenticationForm,
+)
 from .strategy import Selector
 
 
@@ -53,6 +57,7 @@ WishlistLine = get_model("wishlists", "Line")
 
 
 class AccountAuthView(OscarAccountAuthView):
+    login_form_class = UsernameOrEmailAuthenticationForm
     registration_form_class = CustomerRegistrationForm
 
 
