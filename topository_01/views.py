@@ -465,6 +465,34 @@ def remove_wishlist_line(request, line_id):
     return redirect("wishlist")
 
 
+@login_required
+@require_POST
+def update_wishlist_line_quantity(request, line_id):
+    """Update a saved quantity, removing the line when it reaches zero."""
+    wishlist_line = get_object_or_404(
+        WishlistLine.objects.select_related("wishlist"),
+        pk=line_id,
+        wishlist__owner=request.user,
+    )
+    try:
+        quantity = int(request.POST.get("quantity", ""))
+    except (TypeError, ValueError):
+        messages.error(request, "Enter a whole-number quantity.")
+        return redirect("wishlist")
+
+    if quantity < 0:
+        messages.error(request, "Quantity cannot be negative.")
+    elif quantity == 0:
+        title = wishlist_line.get_title()
+        wishlist_line.delete()
+        messages.success(request, f"{title} was removed from your wishlist.")
+    else:
+        wishlist_line.quantity = quantity
+        wishlist_line.save(update_fields=["quantity"])
+        messages.success(request, "Wishlist quantity updated.")
+    return redirect("wishlist")
+
+
 def request_design(request):
     """Collect a shopper's request for a new T-shirt design."""
     if request.method == "POST":

@@ -30,6 +30,11 @@ urlpatterns = [
         views.remove_wishlist_line,
         name="wishlist_remove_line",
     ),
+    path(
+        "wishlist/lines/<int:line_id>/quantity/",
+        views.update_wishlist_line_quantity,
+        name="wishlist_update_quantity",
+    ),
     path("accounts/login/", views.AccountAuthView.as_view()),
     path("accounts/register/", views.AccountRegistrationView.as_view()),
     path("admin/", admin.site.urls),

@@ -8,8 +8,8 @@ from oscar.test.factories import create_basket
 
 from topository_01.views import (
     add_wishlist_line_to_cart,
-    remove_wishlist_line,
     transfer_basket_line_to_wishlist,
+    update_wishlist_line_quantity,
 )
 
 
@@ -103,20 +103,38 @@ class BasketWishlistTransferTests(TestCase):
             wishlist_line.quantity,
         )
 
-    def test_remove_deletes_only_the_shoppers_saved_item(self):
+    def test_zero_quantity_removes_the_shoppers_saved_item(self):
         wishlist = self.user.wishlists.create()
         wishlist.add(self.line.product)
         wishlist_line = wishlist.lines.get(product=self.line.product)
         request = RequestFactory().post(
-            reverse("wishlist_remove_line", args=[wishlist_line.pk])
+            reverse("wishlist_update_quantity", args=[wishlist_line.pk]), {"quantity": 0}
         )
         request.user = self.user
         SessionMiddleware(lambda request: None).process_request(request)
         request.session.save()
         request._messages = FallbackStorage(request)
 
-        response = remove_wishlist_line(request, wishlist_line.pk)
+        response = update_wishlist_line_quantity(request, wishlist_line.pk)
 
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response["Location"], reverse("wishlist"))
         self.assertFalse(wishlist.lines.filter(pk=wishlist_line.pk).exists())
+
+    def test_quantity_update_changes_the_saved_quantity(self):
+        wishlist = self.user.wishlists.create()
+        wishlist.add(self.line.product)
+        wishlist_line = wishlist.lines.get(product=self.line.product)
+        request = RequestFactory().post(
+            reverse("wishlist_update_quantity", args=[wishlist_line.pk]), {"quantity": 3}
+        )
+        request.user = self.user
+        SessionMiddleware(lambda request: None).process_request(request)
+        request.session.save()
+        request._messages = FallbackStorage(request)
+
+        response = update_wishlist_line_quantity(request, wishlist_line.pk)
+
+        self.assertEqual(response.status_code, 302)
+        wishlist_line.refresh_from_db()
+        self.assertEqual(wishlist_line.quantity, 3)
