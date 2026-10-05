@@ -86,6 +86,29 @@
             white-space: nowrap;
             pointer-events: none;
         }
+        .login-tooltip { position: relative; display: inline-block; }
+        .login-tooltip__message {
+            position: absolute;
+            z-index: 2;
+            bottom: calc(100% + .5rem);
+            left: 0;
+            width: 18rem;
+            padding: .5rem .65rem;
+            border-radius: .25rem;
+            background: #343a40;
+            color: #ffffff;
+            font-size: .875rem;
+            line-height: 1.35;
+            text-align: left;
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity .15s ease-in-out;
+        }
+        .login-tooltip:hover .login-tooltip__message,
+        .login-tooltip:focus .login-tooltip__message {
+            visibility: visible;
+            opacity: 1;
+        }
         .tshirt-style-heading { display: flex; align-items: baseline; gap: .5rem; white-space: nowrap; }
         .tshirt-style-heading h2, .tshirt-style-heading h3 { margin-bottom: .5rem; }
 
@@ -229,24 +252,22 @@
                         </a>
                     {% endif %}
                     {% if user.is_authenticated %}
-                        <span title="{% trans 'Choose a style, colour and size, then add the T-shirt to your cart before transferring it to your wishlist.' %}">
-                            <button type="button" class="btn btn-outline-secondary" disabled>
+                        <form class="d-inline" method="post" action="{% url 'customer:wishlists-add-product' product.pk %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-secondary">
                                 {% trans "Add to wishlist" %}
                             </button>
-                        </span>
+                        </form>
                         <a class="btn btn-outline-secondary ml-auto" href="{% url 'wishlist' %}">
                             {% trans "View wishlist" %}
                         </a>
                     {% else %}
-                        <button type="button" class="btn btn-outline-secondary" disabled aria-describedby="wishlist-login-help">
-                            {% trans "Add to wishlist" %}
-                        </button>
-                        <small id="wishlist-login-help" class="d-block mt-2 text-muted">
-                            <a href="{% url 'customer:login' %}?next={{ request.get_full_path|urlencode }}">{% trans "Log in" %}</a>
-                            {% trans "or" %}
-                            <a href="{% url 'customer:register' %}?next={{ request.get_full_path|urlencode }}">{% trans "create an account" %}</a>
-                            {% trans "to save this design." %}
-                        </small>
+                        <span class="login-tooltip" tabindex="0">
+                            <button type="button" class="btn btn-outline-secondary" disabled>
+                                {% trans "Add to wishlist" %}
+                            </button>
+                            <span class="login-tooltip__message" role="tooltip">{% trans "Log in to use this" %}</span>
+                        </span>
                     {% endif %}
                 </div>
             {% endif %}

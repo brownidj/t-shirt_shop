@@ -425,10 +425,9 @@ def wishlist_view(request):
     wishlist = request.user.wishlists.order_by("date_created").first()
     wishlist_lines = ()
     if wishlist is not None:
-        wishlist_lines = wishlist.lines.filter(
-            product__structure=Product.CHILD,
-            product__product_class__name="T-shirt",
-        ).select_related("product", "product__product_class")
+        wishlist_lines = wishlist.lines.filter(product__isnull=False).select_related(
+            "product", "product__product_class"
+        )
     return render(
         request,
         "topository/wishlist.html",

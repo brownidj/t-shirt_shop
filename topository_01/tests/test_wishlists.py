@@ -61,7 +61,7 @@ class BasketWishlistTransferTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, self.line.description)
 
-    def test_wishlist_page_hides_an_unconfigured_design(self):
+    def test_wishlist_page_shows_an_unconfigured_design(self):
         wishlist = self.user.wishlists.create()
         wishlist.add(self.line.product)
         self.client.force_login(self.user)
@@ -69,7 +69,7 @@ class BasketWishlistTransferTests(TestCase):
         response = self.client.get(reverse("wishlist"))
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Your wishlist is empty.")
+        self.assertContains(response, self.line.description)
 
     def test_add_to_cart_keeps_the_saved_item_in_the_wishlist(self):
         self.configure_line_product()

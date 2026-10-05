@@ -13,8 +13,17 @@
                     <div class="card-body">
                         <div class="row align-items-center">
                             <div class="col-md-2 text-center mb-3 mb-md-0">
-                                <img class="img-thumbnail" src="{% url 'tshirt_preview' product.id %}"
-                                     alt="{{ line.get_title }}">
+                                {% if product.is_child and product.product_class.name == "T-shirt" %}
+                                    <img class="img-thumbnail" src="{% url 'tshirt_preview' product.id %}"
+                                         alt="{{ line.get_title }}">
+                                {% else %}
+                                    {% with image=product.primary_image %}
+                                        {% if image and not image.is_missing %}
+                                            {% oscar_thumbnail image.original "100x100" upscale=False as thumb %}
+                                            <img class="img-thumbnail" src="{{ thumb.url }}" alt="{{ line.get_title }}">
+                                        {% endif %}
+                                    {% endwith %}
+                                {% endif %}
                             </div>
                             <div class="col-md-7">
                                 <h2 class="h4 mb-1"><a href="{{ product.get_absolute_url }}">{{ line.get_title }}</a></h2>
