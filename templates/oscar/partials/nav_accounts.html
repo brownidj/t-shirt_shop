@@ -3,7 +3,7 @@
 {% url 'customer:profile-view' as customer_profile_url %}
 {% url 'customer:profile-update' as customer_profile_update_url %}
 
-{% if user.is_authenticated %}
+{% if user.is_authenticated and request.path != customer_summary_url and request.path != customer_profile_url and request.path != customer_profile_update_url %}
     <nav id="top_page" class="navbar navbar-light bg-light accounts">
         <div class="container px-0 d-flex justify-content-end">
             {% if user.is_staff or perms.partner.dashboard_access %}
@@ -11,11 +11,9 @@
                     <i class="fas fa-list-ul mr-2" aria-hidden="true"></i>{% trans "Dashboard" %}
                 </a>
             {% endif %}
-            {% if request.path != customer_summary_url and request.path != customer_profile_url and request.path != customer_profile_update_url %}
-                <a id="logout_link" href="{% url 'customer:logout' %}" class="nav-link">
-                    <i class="fas fa-sign-out-alt mr-2" aria-hidden="true"></i>{% trans "Logout" %}
-                </a>
-            {% endif %}
+            <a id="logout_link" href="{% url 'customer:logout' %}" class="nav-link">
+                <i class="fas fa-sign-out-alt mr-2" aria-hidden="true"></i>{% trans "Logout" %}
+            </a>
         </div>
     </nav>
 {% endif %}
