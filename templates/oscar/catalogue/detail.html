@@ -209,6 +209,26 @@
                         </a>
                     {% endif %}
                 </div>
+                <div class="mt-3">
+                    {% if user.is_authenticated %}
+                        <form method="post" action="{% url 'customer:wishlists-add-product' product.pk %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-secondary">
+                                {% trans "Add to wishlist" %}
+                            </button>
+                        </form>
+                    {% else %}
+                        <button type="button" class="btn btn-outline-secondary" disabled aria-describedby="wishlist-login-help">
+                            {% trans "Add to wishlist" %}
+                        </button>
+                        <small id="wishlist-login-help" class="d-block mt-2 text-muted">
+                            <a href="{% url 'customer:login' %}?next={{ request.get_full_path|urlencode }}">{% trans "Log in" %}</a>
+                            {% trans "or" %}
+                            <a href="{% url 'customer:register' %}?next={{ request.get_full_path|urlencode }}">{% trans "create an account" %}</a>
+                            {% trans "to save this design." %}
+                        </small>
+                    {% endif %}
+                </div>
             {% endif %}
 
             {# Variant details panel lives under the design image #}
