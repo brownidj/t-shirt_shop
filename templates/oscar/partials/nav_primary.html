@@ -28,6 +28,11 @@
                     {% trans "Login" %}
                 </a>
             {% endif %}
+            {% if request.path == basket_summary_url %}
+                <a class="btn btn-outline-light mr-2" href="{% url 'wishlist' %}">
+                    {% trans "View wishlist" %}
+                </a>
+            {% endif %}
             {% if product and product.product_class.name == "Designs" %}
                 <button id="add-to-cart" form="tshirt-add-form" type="submit" class="btn btn-primary mr-2" disabled>
                     {% trans "Add to cart" %}
