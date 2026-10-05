@@ -1,4 +1,5 @@
 {% load i18n %}
+{% url 'customer:summary' as customer_summary_url %}
 
 {% if user.is_authenticated %}
     <nav id="top_page" class="navbar navbar-light bg-light accounts">
@@ -8,9 +9,11 @@
                     <i class="fas fa-list-ul mr-2" aria-hidden="true"></i>{% trans "Dashboard" %}
                 </a>
             {% endif %}
-            <a id="logout_link" href="{% url 'customer:logout' %}" class="nav-link">
-                <i class="fas fa-sign-out-alt mr-2" aria-hidden="true"></i>{% trans "Logout" %}
-            </a>
+            {% if request.path != customer_summary_url %}
+                <a id="logout_link" href="{% url 'customer:logout' %}" class="nav-link">
+                    <i class="fas fa-sign-out-alt mr-2" aria-hidden="true"></i>{% trans "Logout" %}
+                </a>
+            {% endif %}
         </div>
     </nav>
 {% endif %}

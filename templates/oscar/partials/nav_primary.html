@@ -1,5 +1,6 @@
 {% load i18n %}
 {% url 'basket:summary' as basket_summary_url %}
+{% url 'customer:summary' as customer_summary_url %}
 
 <nav class="{% block nav_classes %}navbar navbar-dark bg-dark{% endblock %}">
     <div class="container px-0 d-flex align-items-center w-100">
@@ -9,6 +10,11 @@
 
         <div class="d-flex align-items-center ml-auto">
             {% if user.is_authenticated %}
+                {% if request.path == customer_summary_url %}
+                    <a id="logout_link" class="btn btn-outline-light mr-2" href="{% url 'customer:logout' %}">
+                        <i class="fas fa-sign-out-alt mr-2" aria-hidden="true"></i>{% trans "Logout" %}
+                    </a>
+                {% endif %}
                 <a class="btn btn-outline-light mr-2" href="{% url 'customer:summary' %}">
                     {% if user.first_name %}
                         {% if user.first_name|length > 8 %}
