@@ -128,7 +128,10 @@
     <div class="form-group clearfix formactions">
         <div class="row">
             <div class="col-sm-4 offset-sm-8">
-                <a href="{% url 'checkout:index' %}" class="btn btn-lg btn-primary btn-block">{% trans "Checkout" %}</a>
+                <form action="{% url 'stripe_checkout' %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-lg btn-primary btn-block">{% trans "Checkout" %}</button>
+                </form>
             </div>
         </div>
     </div>

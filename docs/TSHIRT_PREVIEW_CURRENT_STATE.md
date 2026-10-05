@@ -296,9 +296,9 @@ chosen column classes. The required layout is:
 
 | Viewport | Columns | Result |
 | --- | ---: | --- |
-| Desktop (`>= 992px`) | 4 | Four T-shirt cards on each row |
-| Tablet (`576px` to `991.98px`) | 2 | Two cards on each row |
-| Phone (`< 576px`) | 1 | One full-width card per row |
+| Desktop (`>= 1024px`) | 4 | Four T-shirt cards on each row |
+| Tablet (`640px` to `1023.98px`) | 2 | Two cards on each row |
+| Phone (`< 640px`) | 1 | One full-width card per row |
 
 ### Markup
 
@@ -357,14 +357,14 @@ project stylesheet loaded by the catalogue page.
 }
 
 /* Tablet: two previews per row. */
-@media (max-width: 991.98px) {
+@media (max-width: 1023.98px) {
     .tshirt-preview-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
 
 /* Phone: one preview per row. */
-@media (max-width: 575.98px) {
+@media (max-width: 639.98px) {
     .tshirt-preview-grid {
         grid-template-columns: 1fr;
     }
@@ -379,10 +379,23 @@ card without horizontal scrolling.
 ### Verification
 
 In browser responsive mode, confirm the grid at 1200px, 768px, and
-375px wide. There should be four, two, and one cards per row
+390px wide. There should be four, two, and one cards per row
 respectively, with no clipped card, horizontal page scroll, or
-stretched image. Also check a long product name and a preview image
-that is still loading, because both can reveal overflow issues.
+stretched image. Test 375px as a resilience check, not as the primary
+phone target. Also check a long product name and a preview image that
+is still loading, because both can reveal overflow issues.
+
+## Current home-page slideshow responsive layout
+
+The home-page slideshow is implemented in
+`templates/topository/home.html`. Its desktop/laptop layout is unchanged.
+For non-desktop widths (`max-width: 1100px`), the active artwork link is
+`calc(100% - 28px)` wide, leaving a 14px black margin on both sides.
+
+The slideshow also has a minimum 12px black margin below the image. Its
+fixed-height tablet rules are increased by 12px to preserve the image's
+available height rather than compressing the artwork. The narrow-phone
+layout remains auto-height and inherits the 12px bottom padding.
 
 ## Known resolved issues
 
@@ -437,6 +450,3 @@ Use:
 > excessive dark shadows, while dark colours develop whitish/chalky
 > highlight spots. Summarise the actual current implementation and
 > propose the smallest coherent fix. Do not modify any files yet.
-
-david@Mac DjangoProject % python3 -c 'import secrets; print(secrets.token_urlsafe(64))'
-n-dIPSIDZxZGGhdAk_gz81MJNB7DdZnt_2LrlYbTHS79u0SkJVIlDrtufpSXrtbWcKc6vyjaMVC8aQh8WsnUjA

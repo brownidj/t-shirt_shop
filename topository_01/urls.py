@@ -12,6 +12,8 @@ urlpatterns = [
     path("request-a-design/", views.request_design, name="request_design"),
     path("checkout/stripe/", views.stripe_checkout, name="stripe_checkout"),
     path("checkout/stripe/success/", views.stripe_checkout_success, name="stripe_checkout_success"),
+    path("checkout/stripe/cancel/", views.stripe_checkout_cancel, name="stripe_checkout_cancel"),
+    path("checkout/stripe/webhook/", views.stripe_webhook, name="stripe_webhook"),
     path("accounts/login/", views.AccountAuthView.as_view()),
     path("accounts/register/", views.AccountRegistrationView.as_view()),
     path("admin/", admin.site.urls),

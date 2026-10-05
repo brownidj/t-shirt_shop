@@ -1,5 +1,6 @@
 import io
 import json
+import logging
 import os
 from importlib import import_module
 from hashlib import sha256
@@ -8,11 +9,13 @@ from pathlib import Path
 from urllib.parse import urlencode
 
 from django.contrib import messages
+from django.contrib.auth import get_user_model
 from django.core.cache import cache
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from django.http import HttpResponse, Http404, HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from oscar.apps.customer.views import (
     AccountAuthView as OscarAccountAuthView,
@@ -28,10 +31,23 @@ from oscar.apps.catalogue.models import (
 )
 from oscar.apps.partner.models import Partner, StockRecord
 from oscar.apps.catalogue.views import ProductDetailView as OscarProductDetailView
+from oscar.apps.order.utils import OrderCreator
+from oscar.apps.shipping.methods import FixedPrice
+from oscar.core import prices
+from oscar.core.loading import get_model
 from PIL import Image, ImageChops
 from django.conf import settings
 
 from .forms import CustomerRegistrationForm, DesignRequestForm
+from .strategy import Selector
+
+
+logger = logging.getLogger(__name__)
+Basket = get_model("basket", "Basket")
+Country = get_model("address", "Country")
+Order = get_model("order", "Order")
+ShippingAddress = get_model("order", "ShippingAddress")
+UserAddress = get_model("address", "UserAddress")
 
 
 class AccountAuthView(OscarAccountAuthView):
@@ -48,6 +64,125 @@ def _stripe():
     stripe = import_module("stripe")
     stripe.api_key = settings.STRIPE_SECRET_KEY
     return stripe
+
+
+def _stripe_value(value, key, default=None):
+    """Read a value from either Stripe's mapping or object-style responses."""
+    if value is None:
+        return default
+    if isinstance(value, dict):
+        return value.get(key, default)
+    return getattr(value, key, default)
+
+
+def _money_from_cents(amount):
+    return Decimal(amount or 0) / Decimal("100")
+
+
+def _stripe_shipping_details(session):
+    """Support both current and earlier Stripe Checkout Session responses."""
+    collected = _stripe_value(session, "collected_information")
+    return _stripe_value(collected, "shipping_details") or _stripe_value(
+        session, "shipping_details"
+    )
+
+
+def _create_order_from_stripe_session(session):
+    """Create one Oscar order for a paid Checkout Session, idempotently."""
+    if _stripe_value(session, "payment_status") != "paid":
+        return None
+
+    session_id = _stripe_value(session, "id")
+    metadata = _stripe_value(session, "metadata", {}) or {}
+    basket_id = _stripe_value(metadata, "basket_id")
+    if not session_id or not basket_id:
+        raise ValueError("Stripe Checkout Session is missing order metadata")
+
+    order_number = f"stripe-{session_id}"
+    existing = Order.objects.filter(number=order_number).first()
+    if existing:
+        return existing
+
+    try:
+        basket = Basket.objects.get(pk=int(basket_id))
+    except (Basket.DoesNotExist, TypeError, ValueError) as exc:
+        raise ValueError("Stripe Checkout Session references an unknown basket") from exc
+
+    shipping = _stripe_shipping_details(session)
+    address = _stripe_value(shipping, "address")
+    if not address:
+        raise ValueError("Stripe Checkout Session has no delivery address")
+
+    country_code = _stripe_value(address, "country")
+    try:
+        country = Country.objects.get(iso_3166_1_a2=country_code)
+    except Country.DoesNotExist as exc:
+        raise ValueError("Stripe Checkout Session has an unsupported delivery country") from exc
+
+    customer = _stripe_value(session, "customer_details")
+    customer_name = _stripe_value(shipping, "name") or _stripe_value(customer, "name", "")
+    name_parts = customer_name.strip().split(maxsplit=1)
+    shipping_address = ShippingAddress(
+        first_name=name_parts[0] if name_parts else "",
+        last_name=name_parts[1] if len(name_parts) > 1 else "",
+        line1=_stripe_value(address, "line1", ""),
+        line2=_stripe_value(address, "line2", ""),
+        line3=_stripe_value(address, "city", ""),
+        state=_stripe_value(address, "state", ""),
+        postcode=_stripe_value(address, "postal_code", ""),
+        country=country,
+        phone_number=_stripe_value(customer, "phone", ""),
+    )
+
+    currency = (_stripe_value(session, "currency") or "aud").upper()
+    shipping_cost = _stripe_value(_stripe_value(session, "shipping_cost"), "amount_total", 0)
+    shipping_amount = _money_from_cents(shipping_cost)
+    total = _money_from_cents(_stripe_value(session, "amount_total"))
+    shipping_charge = prices.Price(
+        currency=currency, excl_tax=shipping_amount, incl_tax=shipping_amount
+    )
+    order_total = prices.Price(currency=currency, excl_tax=total, incl_tax=total)
+    shipping_method = FixedPrice(
+        charge_excl_tax=shipping_amount, charge_incl_tax=shipping_amount
+    )
+    shipping_method.name = "Standard shipping"
+    shipping_method.code = "stripe-standard-shipping"
+
+    user = None
+    user_id = _stripe_value(metadata, "user_id")
+    if user_id:
+        user = get_user_model().objects.filter(pk=user_id).first()
+    # Webhooks run without Oscar's basket middleware, so attach the same
+    # purchase strategy that is normally provided by a browser request.
+    basket.strategy = Selector().strategy(user=user)
+
+    # The address must be saved before it can be attached to the Oscar order.
+    shipping_address.save()
+    if user and user.is_authenticated:
+        try:
+            user_address = user.addresses.get(hash=shipping_address.generate_hash())
+        except UserAddress.DoesNotExist:
+            user_address = UserAddress(user=user)
+            shipping_address.populate_alternative_model(user_address)
+        user_address.num_orders_as_shipping_address += 1
+        user_address.save()
+    try:
+        order = OrderCreator().place_order(
+            user=user,
+            order_number=order_number,
+            basket=basket,
+            shipping_address=shipping_address,
+            shipping_method=shipping_method,
+            shipping_charge=shipping_charge,
+            total=order_total,
+            guest_email=_stripe_value(customer, "email") or _stripe_value(session, "customer_email", ""),
+        )
+    except IntegrityError:
+        # Stripe can deliver the same completed event more than once.
+        order = Order.objects.get(number=order_number)
+    else:
+        basket.submit()
+    return order
 
 
 @require_POST
@@ -72,13 +207,21 @@ def stripe_checkout(request):
             mode="payment", line_items=line_items,
             shipping_address_collection={"allowed_countries": ["AU"]},
             shipping_options=[{"shipping_rate_data": {"display_name": "Standard shipping", "type": "fixed_amount", "fixed_amount": {"amount": settings.STRIPE_SHIPPING_CENTS, "currency": "aud"}, "tax_behavior": "inclusive"}}],
+            metadata={
+                "basket_id": str(request.basket.id),
+                "user_id": str(request.user.id) if request.user.is_authenticated else "",
+            },
+            client_reference_id=str(request.basket.id),
             success_url=request.build_absolute_uri(reverse("stripe_checkout_success")) + "?session_id={CHECKOUT_SESSION_ID}",
-            cancel_url=request.build_absolute_uri(reverse("basket:summary")),
+            cancel_url=request.build_absolute_uri(reverse("stripe_checkout_cancel")),
             customer_email=request.user.email if request.user.is_authenticated else None,
         )
     except stripe.StripeError:
         messages.error(request, "Stripe could not start checkout. Please try again.")
         return redirect("basket:summary")
+    request.basket.freeze()
+    request.session["stripe_checkout_session_id"] = session.id
+    request.session["stripe_checkout_basket_id"] = request.basket.id
     return redirect(session.url)
 
 
@@ -87,7 +230,53 @@ def stripe_checkout_success(request):
         session = _stripe().checkout.Session.retrieve(request.GET.get("session_id", ""))
     except Exception:
         return HttpResponseBadRequest("We could not confirm this Stripe payment.")
-    return render(request, "topository/stripe_success.html", {"paid": session.payment_status == "paid"})
+    if session.id != request.session.get("stripe_checkout_session_id"):
+        return HttpResponseBadRequest("We could not confirm this Stripe payment.")
+    try:
+        order = _create_order_from_stripe_session(session)
+    except Exception:
+        logger.exception("Could not create an order from Stripe Checkout Session %s", session.id)
+        return render(request, "topository/stripe_success.html", {"paid": False})
+    if order:
+        request.session.pop("stripe_checkout_session_id", None)
+        request.session.pop("stripe_checkout_basket_id", None)
+    return render(request, "topository/stripe_success.html", {"paid": bool(order)})
+
+
+def stripe_checkout_cancel(request):
+    """Restore the basket when the shopper leaves Stripe Checkout unpaid."""
+    basket_id = request.session.pop("stripe_checkout_basket_id", None)
+    request.session.pop("stripe_checkout_session_id", None)
+    if basket_id:
+        basket = Basket.objects.filter(pk=basket_id, status=Basket.FROZEN).first()
+        if basket:
+            basket.thaw()
+    return redirect("basket:summary")
+
+
+@csrf_exempt
+@require_POST
+def stripe_webhook(request):
+    """Record paid Checkout Sessions even when the shopper never returns."""
+    webhook_secret = settings.STRIPE_WEBHOOK_SECRET
+    if not webhook_secret:
+        logger.error("Received a Stripe webhook but STRIPE_WEBHOOK_SECRET is not configured")
+        return HttpResponse(status=503)
+    try:
+        event = _stripe().Webhook.construct_event(
+            request.body, request.headers.get("Stripe-Signature", ""), webhook_secret
+        )
+    except Exception:
+        logger.warning("Rejected an invalid Stripe webhook")
+        return HttpResponseBadRequest("Invalid Stripe webhook")
+
+    if event["type"] in {"checkout.session.completed", "checkout.session.async_payment_succeeded"}:
+        try:
+            _create_order_from_stripe_session(event["data"]["object"])
+        except Exception:
+            logger.exception("Could not process Stripe webhook %s", event.get("id"))
+            return HttpResponse(status=500)
+    return HttpResponse(status=200)
 
 
 KIDS_STAPLE_TEE_COLOURS = frozenset(

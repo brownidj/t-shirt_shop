@@ -90,6 +90,31 @@ After each release:
 4. If the release fails, check the cPanel/Python application logs before
    attempting another deployment.
 
+## Stripe checkout releases
+
+The Stripe checkout code needs two server-only environment variables before it
+can take a live payment:
+
+- `STRIPE_SECRET_KEY`
+- `STRIPE_WEBHOOK_SECRET`
+
+Set them in the Spaceship/Python application's server environment. Never put
+either value in Git, a committed `.env` file, a deployment script, or a chat
+message.
+
+In Stripe, create a webhook endpoint for:
+
+`https://tshirts.topository.org/checkout/stripe/webhook/`
+
+Subscribe it to `checkout.session.completed` and
+`checkout.session.async_payment_succeeded`, then use that endpoint's signing
+secret as `STRIPE_WEBHOOK_SECRET`. The webhook records paid purchases even if a
+shopper closes their browser before returning to the site.
+
+Before enabling live payments, make one test-mode purchase as a guest and one
+while signed in. Confirm that both orders contain the Stripe delivery address,
+and that the signed-in purchase appears in **Account → Order History**.
+
 ## Rollback
 
 Prefer a reversible Git rollback:
@@ -108,4 +133,3 @@ directory or using destructive Git commands there.
 - The development Mac's existing SSH key is authorised in cPanel and GitHub.
 - The local Git remote uses GitHub SSH authentication.
 - The server has the staging checkout and executable deployment script.
-
