@@ -229,12 +229,12 @@
                         </a>
                     {% endif %}
                     {% if user.is_authenticated %}
-                        <form class="d-inline" method="post" action="{% url 'customer:wishlists-add-product' product.pk %}">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-outline-secondary">
-                                {% trans "Add to wishlist" %}
-                            </button>
-                        </form>
+                        <button type="button" class="btn btn-outline-secondary" disabled>
+                            {% trans "Add to wishlist" %}
+                        </button>
+                        <small class="d-block mt-2 text-muted">
+                            {% trans "Choose a style, colour and size, then add the T-shirt to your cart before transferring it to your wishlist." %}
+                        </small>
                         <a class="btn btn-outline-secondary ml-auto" href="{% url 'wishlist' %}">
                             {% trans "View wishlist" %}
                         </a>

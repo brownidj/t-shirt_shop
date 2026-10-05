@@ -6,11 +6,6 @@
 {% block headertext %}{% trans "Wishlist" %}{% endblock %}
 
 {% block content %}
-    <div class="d-flex align-items-center mb-3">
-        <h1 class="mb-0">{% trans "Wishlist" %}</h1>
-        <a class="btn btn-outline-secondary ml-auto" href="{% url 'basket:summary' %}">{% trans "View cart" %}</a>
-    </div>
-
     {% if wishlist_lines %}
         {% for line in wishlist_lines %}
             {% with product=line.product %}
@@ -18,17 +13,8 @@
                     <div class="card-body">
                         <div class="row align-items-center">
                             <div class="col-md-2 text-center mb-3 mb-md-0">
-                                    {% if product.is_child and product.product_class.name == "T-shirt" %}
-                                        <img class="img-thumbnail" src="{% url 'tshirt_preview' product.id %}"
-                                         alt="{{ line.get_title }}">
-                                    {% else %}
-                                    {% with image=product.primary_image %}
-                                        {% if image and not image.is_missing %}
-                                            {% oscar_thumbnail image.original "100x100" upscale=False as thumb %}
-                                            <img class="img-thumbnail" src="{{ thumb.url }}" alt="{{ line.get_title }}">
-                                        {% endif %}
-                                    {% endwith %}
-                                {% endif %}
+                                <img class="img-thumbnail" src="{% url 'tshirt_preview' product.id %}"
+                                     alt="{{ line.get_title }}">
                             </div>
                             <div class="col-md-7">
                                 <h2 class="h4 mb-1"><a href="{{ product.get_absolute_url }}">{{ line.get_title }}</a></h2>
@@ -38,14 +24,10 @@
                             </div>
                             <div class="col-md-3 text-md-right mt-3 mt-md-0">
                                 <a class="btn btn-outline-primary mr-2" href="{{ product.get_absolute_url }}">{% trans "View design" %}</a>
-                                {% if product.is_child and product.product_class.name == "T-shirt" %}
-                                    <form class="d-inline" method="post" action="{% url 'wishlist_add_to_cart' line.pk %}">
-                                        {% csrf_token %}
-                                        <button class="btn btn-primary" type="submit">{% trans "Add to cart" %}</button>
-                                    </form>
-                                {% else %}
-                                    <a class="btn btn-primary" href="{{ product.get_absolute_url }}">{% trans "Choose options" %}</a>
-                                {% endif %}
+                                <form class="d-inline" method="post" action="{% url 'wishlist_add_to_cart' line.pk %}">
+                                    {% csrf_token %}
+                                    <button class="btn btn-primary" type="submit">{% trans "Add to cart" %}</button>
+                                </form>
                             </div>
                         </div>
                     </div>
