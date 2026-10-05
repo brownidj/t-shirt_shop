@@ -222,8 +222,14 @@
                     </div>
                 </div>
                 <div class="mt-3">
+                    {% if request.GET.line %}
+                        <a class="btn btn-outline-primary mr-2"
+                           href="{{ product.get_absolute_url }}?style={{ request.GET.style|urlencode }}&amp;colour={{ request.GET.colour|urlencode }}&amp;size={{ request.GET.size|urlencode }}">
+                            {% trans "Add another" %}
+                        </a>
+                    {% endif %}
                     {% if user.is_authenticated %}
-                        <form method="post" action="{% url 'customer:wishlists-add-product' product.pk %}">
+                        <form class="d-inline" method="post" action="{% url 'customer:wishlists-add-product' product.pk %}">
                             {% csrf_token %}
                             <button type="submit" class="btn btn-outline-secondary">
                                 {% trans "Add to wishlist" %}
