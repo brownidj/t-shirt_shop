@@ -49,6 +49,7 @@ Country = get_model("address", "Country")
 Order = get_model("order", "Order")
 ShippingAddress = get_model("order", "ShippingAddress")
 UserAddress = get_model("address", "UserAddress")
+WishlistLine = get_model("wishlists", "Line")
 
 
 class AccountAuthView(OscarAccountAuthView):
@@ -432,6 +433,21 @@ def wishlist_view(request):
         "topository/wishlist.html",
         {"wishlist": wishlist, "wishlist_lines": wishlist_lines},
     )
+
+
+@login_required
+@require_POST
+def add_wishlist_line_to_cart(request, line_id):
+    """Add a saved, fully configured T-shirt to the current basket."""
+    wishlist_line = get_object_or_404(
+        WishlistLine.objects.select_related("product", "wishlist"),
+        pk=line_id,
+        wishlist__owner=request.user,
+    )
+    product = wishlist_line.product
+    request.basket.add_product(product, quantity=wishlist_line.quantity)
+    messages.success(request, f"{product.title} was added to your cart.")
+    return redirect("wishlist")
 
 
 def request_design(request):

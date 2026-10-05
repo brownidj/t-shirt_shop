@@ -37,7 +37,15 @@
                                 {% endif %}
                             </div>
                             <div class="col-md-3 text-md-right mt-3 mt-md-0">
-                                <a class="btn btn-outline-primary" href="{{ product.get_absolute_url }}">{% trans "View design" %}</a>
+                                <a class="btn btn-outline-primary mr-2" href="{{ product.get_absolute_url }}">{% trans "View design" %}</a>
+                                {% if product.is_child and product.product_class.name == "T-shirt" %}
+                                    <form class="d-inline" method="post" action="{% url 'wishlist_add_to_cart' line.pk %}">
+                                        {% csrf_token %}
+                                        <button class="btn btn-primary" type="submit">{% trans "Add to cart" %}</button>
+                                    </form>
+                                {% else %}
+                                    <a class="btn btn-primary" href="{{ product.get_absolute_url }}">{% trans "Choose options" %}</a>
+                                {% endif %}
                             </div>
                         </div>
                     </div>

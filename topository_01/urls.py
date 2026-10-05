@@ -20,6 +20,11 @@ urlpatterns = [
         name="basket_transfer_to_wishlist",
     ),
     path("wishlist/", views.wishlist_view, name="wishlist"),
+    path(
+        "wishlist/lines/<int:line_id>/add-to-cart/",
+        views.add_wishlist_line_to_cart,
+        name="wishlist_add_to_cart",
+    ),
     path("accounts/login/", views.AccountAuthView.as_view()),
     path("accounts/register/", views.AccountRegistrationView.as_view()),
     path("admin/", admin.site.urls),

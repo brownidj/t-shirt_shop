@@ -5,7 +5,7 @@ from django.test import RequestFactory, TestCase
 from django.urls import reverse
 from oscar.test.factories import create_basket
 
-from topository_01.views import transfer_basket_line_to_wishlist
+from topository_01.views import add_wishlist_line_to_cart, transfer_basket_line_to_wishlist
 
 
 class BasketWishlistTransferTests(TestCase):
@@ -46,3 +46,30 @@ class BasketWishlistTransferTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, self.line.description)
+
+    def test_add_to_cart_keeps_the_saved_item_in_the_wishlist(self):
+        wishlist = self.user.wishlists.create()
+        wishlist.add(self.line.product)
+        wishlist_line = wishlist.lines.get(product=self.line.product)
+        self.line.delete()
+        self.basket.refresh_from_db()
+        self.assertFalse(self.basket.lines.exists())
+
+        request = RequestFactory().post(
+            reverse("wishlist_add_to_cart", args=[wishlist_line.pk])
+        )
+        request.user = self.user
+        request.basket = self.basket
+        SessionMiddleware(lambda request: None).process_request(request)
+        request.session.save()
+        request._messages = FallbackStorage(request)
+
+        response = add_wishlist_line_to_cart(request, wishlist_line.pk)
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response["Location"], reverse("wishlist"))
+        self.assertTrue(wishlist.lines.filter(pk=wishlist_line.pk).exists())
+        self.assertEqual(
+            self.basket.lines.get(product=self.line.product).quantity,
+            wishlist_line.quantity,
+        )
