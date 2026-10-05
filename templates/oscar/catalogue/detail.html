@@ -196,14 +196,14 @@
                     </button>
                     {% if design_navigation.previous %}
                         <a class="design-artwork__nav design-artwork__nav--previous"
-                           href="{{ design_navigation.previous.get_absolute_url }}{% if request.GET.line %}?line={{ request.GET.line }}{% endif %}"
+                           href="{{ design_navigation.previous.get_absolute_url }}{% if request.GET.line %}?line={{ request.GET.line }}&amp;auto_update=1{% endif %}"
                            aria-label="{% trans 'Previous design in this category' %}">
                             <i class="fas fa-angle-left" aria-hidden="true"></i>
                         </a>
                     {% endif %}
                     {% if design_navigation.next %}
                         <a class="design-artwork__nav design-artwork__nav--next"
-                           href="{{ design_navigation.next.get_absolute_url }}{% if request.GET.line %}?line={{ request.GET.line }}{% endif %}"
+                           href="{{ design_navigation.next.get_absolute_url }}{% if request.GET.line %}?line={{ request.GET.line }}&amp;auto_update=1{% endif %}"
                            aria-label="{% trans 'Next design in this category' %}">
                             <i class="fas fa-angle-right" aria-hidden="true"></i>
                         </a>
@@ -215,9 +215,6 @@
             {% if product.product_class.name == "Designs" %}
                 <div id="variant-panel" class="card mt-3 d-none">
                     <div class="card-body">
-                        <button id="update-cart" form="tshirt-add-form" type="submit" class="btn btn-primary float-right d-none" disabled>
-                            {% trans "Update cart" %}
-                        </button>
                         <div class="variant-panel-preview">
                             <img id="variant-panel-image" class="img-fluid" alt="">
                             <p id="variant-price" aria-live="polite"></p>
@@ -311,7 +308,7 @@
                             var selectedColourInput = document.getElementById("selected-colour");
                             var selectedSizeInput = document.getElementById("selected-size");
                             var selectedBasketLineInput = document.getElementById("selected-basket-line");
-                            var updateCartButton = document.getElementById("update-cart");
+                            var addToCartForm = document.getElementById("tshirt-add-form");
 
                             var panel       = document.getElementById("variant-panel");
                             var panelImg    = document.getElementById("variant-panel-image");
@@ -419,7 +416,19 @@
                             if (requestedBasketLine && selectedBasketLineInput) {
                                 selectedBasketLineInput.value = requestedBasketLine;
                                 addToCartButton.disabled = true;
-                                if (updateCartButton) updateCartButton.classList.remove("d-none");
+                            }
+
+                            function updateCartAutomatically() {
+                                if (!requestedBasketLine || !addToCartForm || addToCartForm.dataset.submitting) {
+                                    return;
+                                }
+
+                                if (!findMatchingVariant()) {
+                                    return;
+                                }
+
+                                addToCartForm.dataset.submitting = "true";
+                                addToCartForm.requestSubmit();
                             }
 
                             function availableColours() {
@@ -484,6 +493,7 @@
                                 renderColours();
                                 renderSizes();
                                 updateStatusAndPanel();
+                                updateCartAutomatically();
                             }
 
 
@@ -562,6 +572,7 @@
                                         swatch.setAttribute("aria-pressed", "true");
 
                                         updateStatusAndPanel();
+                                        updateCartAutomatically();
                                     });
 
                                     colourContainer.appendChild(swatch);
@@ -602,6 +613,7 @@
                                             });
                                             wrapper.classList.add("active");
                                             updateStatusAndPanel();
+                                            updateCartAutomatically();
                                         }
                                     });
 
@@ -660,7 +672,6 @@
                                     if (priceDisplay) priceDisplay.textContent = "";
                                     updateVariantPanel(null);   // hide the panel
                                     addToCartButton.disabled = true;
-                                    if (updateCartButton) updateCartButton.disabled = true;
                                     return;
                                 }
 
@@ -675,13 +686,11 @@
                                     selectedColourInput.value = v.colour;
                                     selectedSizeInput.value = v.size;
                                     addToCartButton.disabled = !!requestedBasketLine;
-                                    if (updateCartButton) updateCartButton.disabled = false;
                                 } else {
                                     status.textContent = "That combination is not available.";
                                     if (priceDisplay) priceDisplay.textContent = "";
                                     updateVariantPanel(null);
                                     addToCartButton.disabled = true;
-                                    if (updateCartButton) updateCartButton.disabled = true;
                                 }
                             }
 
@@ -694,6 +703,9 @@
                                 renderColours();
                                 renderSizes();
                                 updateStatusAndPanel();
+                                if (selectionParameters.get("auto_update") === "1") {
+                                    updateCartAutomatically();
+                                }
                             }
 
                             // Load colour map, then init
