@@ -69,12 +69,12 @@
                                 </div>
                             </div>
                             <div class="basket-line-actions">
-                                <a href="#" class="btn btn-outline-danger btn-sm d-block w-100 mb-2"
+                                <a href="#" class="btn btn-outline-danger btn-sm mr-1 mb-1"
                                    data-id="{{ forloop.counter0 }}" data-behaviours="remove">{% trans "Remove" %}</a>
                                 {% if user.is_authenticated %}
-                                    <a href="#" class="btn btn-outline-secondary btn-sm d-block w-100 mb-2"
+                                    <a href="#" class="btn btn-outline-secondary btn-sm mr-1 mb-1"
                                        data-id="{{ forloop.counter0 }}" data-behaviours="save">{% trans "Save for later" %}</a>
-                                    <button type="submit" class="btn btn-outline-secondary btn-sm d-block w-100"
+                                    <button type="submit" class="btn btn-outline-secondary btn-sm mb-1"
                                             formaction="{% url 'basket_transfer_to_wishlist' %}"
                                             name="line_id" value="{{ line.pk }}">
                                         {% trans "Transfer to wishlist" %}
