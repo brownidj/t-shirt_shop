@@ -96,11 +96,13 @@
                                 </p>
                             {% endif %}
                             {% if user.is_authenticated %}
-                                <div class="mt-2 text-right">
+                                <div class="basket-wishlist-transfer">
                                     <button type="submit" class="btn btn-outline-secondary btn-sm"
                                             formaction="{% url 'basket_transfer_to_wishlist' %}"
-                                            name="line_id" value="{{ line.pk }}">
-                                        {% trans "Transfer to wishlist" %}
+                                            name="line_id" value="{{ line.pk }}"
+                                            title="{% trans 'Removes this from your cart and leaves it in your wishlist.' %}"
+                                            aria-label="{% trans 'Transfer to wishlist instead. Removes this from your cart and leaves it in your wishlist.' %}">
+                                        {% trans "Transfer to wishlist instead" %}
                                     </button>
                                 </div>
                             {% endif %}
