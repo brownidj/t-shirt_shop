@@ -2,6 +2,8 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 
+from topository_01.forms import UsernameOrEmailAuthenticationForm
+
 
 class UsernameOrEmailLoginTests(TestCase):
     def setUp(self):
@@ -37,3 +39,8 @@ class UsernameOrEmailLoginTests(TestCase):
             response, reverse("customer:summary"), fetch_redirect_response=False
         )
         self.assertEqual(self.client.session["_auth_user_id"], str(self.user.pk))
+
+    def test_login_identifier_label_mentions_email_and_username(self):
+        form = UsernameOrEmailAuthenticationForm(host="tshirts.topository.org")
+
+        self.assertEqual(form.fields["username"].label, "Email or username")

@@ -14,7 +14,7 @@ from .models import DesignRequest, MarketingConsent
 class UsernameOrEmailAuthenticationForm(OscarEmailAuthenticationForm):
     """Accept either a username or an email address at sign-in."""
 
-    username = forms.CharField(label=_("Username or email"), max_length=254)
+    username = forms.CharField(label=_("Email or username"), max_length=254)
 
 
 class DesignRequestForm(forms.ModelForm):
