@@ -9,6 +9,7 @@ from pathlib import Path
 from urllib.parse import urlencode
 
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.db import IntegrityError, transaction
@@ -382,6 +383,39 @@ def configured_product_detail(request, product_slug, pk):
             return redirect(f"{product.parent.get_absolute_url()}?{urlencode(selections)}")
 
     return OscarProductDetailView.as_view()(request, product_slug=product_slug, pk=pk)
+
+
+@login_required
+@require_POST
+def transfer_basket_line_to_wishlist(request):
+    """Move one of the current shopper's basket lines to their wishlist."""
+    line_id = request.POST.get("line_id", "")
+    if not line_id.isdigit():
+        raise Http404("Basket line not found")
+
+    with transaction.atomic():
+        line = get_object_or_404(
+            request.basket.lines.select_related("product").select_for_update(),
+            pk=int(line_id),
+        )
+        wishlist = request.user.wishlists.order_by("date_created").first()
+        if wishlist is None:
+            wishlist = request.user.wishlists.create()
+
+        wishlist_line, created = wishlist.lines.get_or_create(
+            product=line.product,
+            defaults={"title": line.description, "quantity": line.quantity},
+        )
+        if not created:
+            wishlist_line.quantity += line.quantity
+            wishlist_line.save(update_fields=["quantity"])
+
+        line_description = line.description
+        line.delete()
+        request.basket.reset_offer_applications()
+
+    messages.success(request, f"'{line_description}' was transferred to your wishlist.")
+    return redirect("basket:summary")
 
 
 def request_design(request):

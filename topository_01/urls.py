@@ -14,6 +14,11 @@ urlpatterns = [
     path("checkout/stripe/success/", views.stripe_checkout_success, name="stripe_checkout_success"),
     path("checkout/stripe/cancel/", views.stripe_checkout_cancel, name="stripe_checkout_cancel"),
     path("checkout/stripe/webhook/", views.stripe_webhook, name="stripe_webhook"),
+    path(
+        "basket/transfer-to-wishlist/",
+        views.transfer_basket_line_to_wishlist,
+        name="basket_transfer_to_wishlist",
+    ),
     path("accounts/login/", views.AccountAuthView.as_view()),
     path("accounts/register/", views.AccountRegistrationView.as_view()),
     path("admin/", admin.site.urls),
