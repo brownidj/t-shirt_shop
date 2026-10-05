@@ -25,6 +25,11 @@ urlpatterns = [
         views.add_wishlist_line_to_cart,
         name="wishlist_add_to_cart",
     ),
+    path(
+        "wishlist/lines/<int:line_id>/remove/",
+        views.remove_wishlist_line,
+        name="wishlist_remove_line",
+    ),
     path("accounts/login/", views.AccountAuthView.as_view()),
     path("accounts/register/", views.AccountRegistrationView.as_view()),
     path("admin/", admin.site.urls),

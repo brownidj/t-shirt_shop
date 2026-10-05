@@ -450,6 +450,21 @@ def add_wishlist_line_to_cart(request, line_id):
     return redirect("wishlist")
 
 
+@login_required
+@require_POST
+def remove_wishlist_line(request, line_id):
+    """Remove one saved item from the current shopper's wishlist."""
+    wishlist_line = get_object_or_404(
+        WishlistLine.objects.select_related("wishlist"),
+        pk=line_id,
+        wishlist__owner=request.user,
+    )
+    title = wishlist_line.get_title()
+    wishlist_line.delete()
+    messages.success(request, f"{title} was removed from your wishlist.")
+    return redirect("wishlist")
+
+
 def request_design(request):
     """Collect a shopper's request for a new T-shirt design."""
     if request.method == "POST":

@@ -6,7 +6,11 @@ from django.urls import reverse
 from oscar.apps.catalogue.models import Product
 from oscar.test.factories import create_basket
 
-from topository_01.views import add_wishlist_line_to_cart, transfer_basket_line_to_wishlist
+from topository_01.views import (
+    add_wishlist_line_to_cart,
+    remove_wishlist_line,
+    transfer_basket_line_to_wishlist,
+)
 
 
 class BasketWishlistTransferTests(TestCase):
@@ -98,3 +102,21 @@ class BasketWishlistTransferTests(TestCase):
             self.basket.lines.get(product=self.line.product).quantity,
             wishlist_line.quantity,
         )
+
+    def test_remove_deletes_only_the_shoppers_saved_item(self):
+        wishlist = self.user.wishlists.create()
+        wishlist.add(self.line.product)
+        wishlist_line = wishlist.lines.get(product=self.line.product)
+        request = RequestFactory().post(
+            reverse("wishlist_remove_line", args=[wishlist_line.pk])
+        )
+        request.user = self.user
+        SessionMiddleware(lambda request: None).process_request(request)
+        request.session.save()
+        request._messages = FallbackStorage(request)
+
+        response = remove_wishlist_line(request, wishlist_line.pk)
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response["Location"], reverse("wishlist"))
+        self.assertFalse(wishlist.lines.filter(pk=wishlist_line.pk).exists())
