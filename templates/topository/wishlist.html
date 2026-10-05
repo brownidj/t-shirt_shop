@@ -8,6 +8,7 @@
 {% block extrastyles %}
     {{ block.super }}
     <style>
+        .wishlist-item-controls { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
         .wishlist-item-actions { display: flex; flex-direction: column; align-items: flex-end; }
         .wishlist-item-actions__primary { display: flex; flex-direction: column; align-items: flex-end; gap: .5rem; }
         .wishlist-quantity { width: 5rem; }
@@ -38,24 +39,24 @@
                                     {% endwith %}
                                 {% endif %}
                             </div>
-                            <div class="col-md-7">
+                            <div class="col-md-10">
                                 <h2 class="h4 mb-1"><a href="{{ product.get_absolute_url }}">{{ line.get_title }}</a></h2>
-                                <form method="post" action="{% url 'wishlist_update_quantity' line.pk %}">
-                                    {% csrf_token %}
-                                    <label class="sr-only" for="wishlist-quantity-{{ line.pk }}">{% trans "Quantity" %}</label>
-                                    <input id="wishlist-quantity-{{ line.pk }}" class="form-control wishlist-quantity" type="number"
-                                           name="quantity" value="{{ line.quantity }}" min="0" step="1"
-                                           onchange="this.form.submit()">
-                                </form>
-                            </div>
-                            <div class="col-md-3 mt-3 mt-md-0">
-                                <div class="wishlist-item-actions">
-                                    <div class="wishlist-item-actions__primary">
-                                        <a class="btn btn-outline-primary" href="{{ product.get_absolute_url }}">{% trans "View design" %}</a>
-                                        <form method="post" action="{% url 'wishlist_add_to_cart' line.pk %}">
-                                            {% csrf_token %}
-                                            <button class="btn btn-primary" type="submit">{% trans "Add to cart" %}</button>
-                                        </form>
+                                <div class="wishlist-item-controls">
+                                    <form method="post" action="{% url 'wishlist_update_quantity' line.pk %}">
+                                        {% csrf_token %}
+                                        <label class="sr-only" for="wishlist-quantity-{{ line.pk }}">{% trans "Quantity" %}</label>
+                                        <input id="wishlist-quantity-{{ line.pk }}" class="form-control wishlist-quantity" type="number"
+                                               name="quantity" value="{{ line.quantity }}" min="0" step="1"
+                                               onchange="this.form.submit()">
+                                    </form>
+                                    <div class="wishlist-item-actions">
+                                        <div class="wishlist-item-actions__primary">
+                                            <a class="btn btn-outline-primary" href="{{ product.get_absolute_url }}">{% trans "View design" %}</a>
+                                            <form method="post" action="{% url 'wishlist_add_to_cart' line.pk %}">
+                                                {% csrf_token %}
+                                                <button class="btn btn-primary" type="submit">{% trans "Add to cart" %}</button>
+                                            </form>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
