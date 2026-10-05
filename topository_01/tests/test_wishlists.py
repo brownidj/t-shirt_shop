@@ -36,3 +36,13 @@ class BasketWishlistTransferTests(TestCase):
         wishlist_line = self.user.wishlists.get().lines.get()
         self.assertEqual(wishlist_line.product_id, self.line.product_id)
         self.assertEqual(wishlist_line.quantity, self.line.quantity)
+
+    def test_wishlist_page_shows_the_shoppers_saved_items(self):
+        wishlist = self.user.wishlists.create()
+        wishlist.add(self.line.product)
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse("wishlist"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, self.line.description)

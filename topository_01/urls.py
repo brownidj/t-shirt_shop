@@ -19,6 +19,7 @@ urlpatterns = [
         views.transfer_basket_line_to_wishlist,
         name="basket_transfer_to_wishlist",
     ),
+    path("wishlist/", views.wishlist_view, name="wishlist"),
     path("accounts/login/", views.AccountAuthView.as_view()),
     path("accounts/register/", views.AccountRegistrationView.as_view()),
     path("admin/", admin.site.urls),

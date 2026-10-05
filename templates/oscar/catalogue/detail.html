@@ -221,7 +221,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="mt-3">
+                <div class="mt-3 d-flex align-items-center">
                     {% if request.GET.line %}
                         <a class="btn btn-outline-primary mr-2"
                            href="{{ product.get_absolute_url }}?style={{ request.GET.style|urlencode }}&amp;colour={{ request.GET.colour|urlencode }}&amp;size={{ request.GET.size|urlencode }}">
@@ -235,6 +235,9 @@
                                 {% trans "Add to wishlist" %}
                             </button>
                         </form>
+                        <a class="btn btn-outline-secondary ml-auto" href="{% url 'wishlist' %}">
+                            {% trans "View wishlist" %}
+                        </a>
                     {% else %}
                         <button type="button" class="btn btn-outline-secondary" disabled aria-describedby="wishlist-login-help">
                             {% trans "Add to wishlist" %}

@@ -418,6 +418,22 @@ def transfer_basket_line_to_wishlist(request):
     return redirect("basket:summary")
 
 
+@login_required
+def wishlist_view(request):
+    """Show the current shopper's default wishlist."""
+    wishlist = request.user.wishlists.order_by("date_created").first()
+    wishlist_lines = ()
+    if wishlist is not None:
+        wishlist_lines = wishlist.lines.filter(product__isnull=False).select_related(
+            "product", "product__product_class"
+        )
+    return render(
+        request,
+        "topository/wishlist.html",
+        {"wishlist": wishlist, "wishlist_lines": wishlist_lines},
+    )
+
+
 def request_design(request):
     """Collect a shopper's request for a new T-shirt design."""
     if request.method == "POST":
@@ -786,7 +802,7 @@ def add_configured_tshirt(request, product_id):
             )
     else:
         request.basket.add_product(child, quantity=1)
-        messages.success(request, f"{child.title} was added to your basket.")
+        messages.success(request, f"{child.title} was added to your cart.")
 
     # Keep the shopper on the design page after adding a shirt. The cart is
     # opened explicitly through the cart icon in the primary navigation.

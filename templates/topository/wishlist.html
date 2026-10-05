@@ -1,0 +1,51 @@
+{% extends "oscar/layout.html" %}
+{% load i18n %}
+{% load image_tags %}
+
+{% block title %}{% trans "Wishlist" %} | {{ block.super }}{% endblock %}
+{% block headertext %}{% trans "Wishlist" %}{% endblock %}
+
+{% block content %}
+    <div class="d-flex align-items-center mb-3">
+        <h1 class="mb-0">{% trans "Wishlist" %}</h1>
+        <a class="btn btn-outline-secondary ml-auto" href="{% url 'basket:summary' %}">{% trans "View cart" %}</a>
+    </div>
+
+    {% if wishlist_lines %}
+        {% for line in wishlist_lines %}
+            {% with product=line.product %}
+                <article class="card mb-3">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-md-2 text-center mb-3 mb-md-0">
+                                    {% if product.is_child and product.product_class.name == "T-shirt" %}
+                                        <img class="img-thumbnail" src="{% url 'tshirt_preview' product.id %}"
+                                         alt="{{ line.get_title }}">
+                                    {% else %}
+                                    {% with image=product.primary_image %}
+                                        {% if image and not image.is_missing %}
+                                            {% oscar_thumbnail image.original "100x100" upscale=False as thumb %}
+                                            <img class="img-thumbnail" src="{{ thumb.url }}" alt="{{ line.get_title }}">
+                                        {% endif %}
+                                    {% endwith %}
+                                {% endif %}
+                            </div>
+                            <div class="col-md-7">
+                                <h2 class="h4 mb-1"><a href="{{ product.get_absolute_url }}">{{ line.get_title }}</a></h2>
+                                {% if line.quantity > 1 %}
+                                    <p class="mb-0 text-muted">{% blocktrans count quantity=line.quantity %}{{ quantity }} saved item{% plural %}{{ quantity }} saved items{% endblocktrans %}</p>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-3 text-md-right mt-3 mt-md-0">
+                                <a class="btn btn-outline-primary" href="{{ product.get_absolute_url }}">{% trans "View design" %}</a>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            {% endwith %}
+        {% endfor %}
+    {% else %}
+        <p>{% trans "Your wishlist is empty." %}</p>
+        <a class="btn btn-primary" href="{% url 'catalogue:index' %}">{% trans "Browse store" %}</a>
+    {% endif %}
+{% endblock %}
