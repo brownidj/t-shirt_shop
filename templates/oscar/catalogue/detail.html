@@ -229,12 +229,11 @@
                         </a>
                     {% endif %}
                     {% if user.is_authenticated %}
-                        <button type="button" class="btn btn-outline-secondary" disabled>
-                            {% trans "Add to wishlist" %}
-                        </button>
-                        <small class="d-block mt-2 text-muted">
-                            {% trans "Choose a style, colour and size, then add the T-shirt to your cart before transferring it to your wishlist." %}
-                        </small>
+                        <span title="{% trans 'Choose a style, colour and size, then add the T-shirt to your cart before transferring it to your wishlist.' %}">
+                            <button type="button" class="btn btn-outline-secondary" disabled>
+                                {% trans "Add to wishlist" %}
+                            </button>
+                        </span>
                         <a class="btn btn-outline-secondary ml-auto" href="{% url 'wishlist' %}">
                             {% trans "View wishlist" %}
                         </a>
