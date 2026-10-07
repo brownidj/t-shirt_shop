@@ -46,8 +46,6 @@
                         {% else %}
                             {{ user.first_name }}
                         {% endif %}
-                    {% else %}
-                        {{ user.email }}
                     {% endif %}
                     {% if num_unread_notifications > 0 %}
                         <span class="badge badge-warning">{{ num_unread_notifications }}</span>
