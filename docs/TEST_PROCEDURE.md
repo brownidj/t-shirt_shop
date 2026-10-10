@@ -75,6 +75,36 @@ The ten skipped tests are the signed-in wishlist checks. This is deliberate: the
 4. Run the full local test again. Do not treat the check as complete until it reports `60 passed`.
 5. After deployment, run the read-only live check and confirm `50 passed` and `10 skipped`.
 
+## Adding a new device or screen format
+
+1. Find the device's browser engine and screen size. Use **Chromium** for Android and most desktop devices; use **WebKit** for iPhone, iPad, and Safari.
+2. Open `playwright.config.cjs` and add one entry to the `projects` list. Give it a clear lowercase name and set its viewport width and height in pixels.
+
+   For example, an Android profile can look like this:
+
+   ```js
+   {
+     name: "example-phone",
+     use: {
+       browserName: "chromium",
+       viewport: { width: 400, height: 900 },
+       deviceScaleFactor: 3,
+       isMobile: true,
+       hasTouch: true,
+     },
+   },
+   ```
+
+   For an Apple phone or tablet, change `browserName` to `"webkit"`.
+3. Add the device name and viewport size to the table in `docs/responsive-testing.md`.
+4. Run the full local test:
+
+   ```sh
+   npm run test:responsive
+   ```
+
+5. Confirm that the new device name appears in the results and that the total increases by six checks: five public pages plus the signed-in wishlist. Review any new screenshots before approving intentional design changes.
+
 ## Screen formats covered
 
 The suite covers small and large phones, iPhone 16 Pro, OPPO A96 (CPH2333), tablet, iPad mini (A17 Pro), laptop, MacBook Pro 16-inch (2019), desktop, and a Safari-style phone browser. See [responsive-testing.md](responsive-testing.md) for their viewport sizes and technical details.
