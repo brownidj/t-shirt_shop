@@ -31,6 +31,10 @@ This starts a local Django server automatically and checks the home page, catalo
 npm run test:responsive:update
 ```
 
+## Automatic GitHub check
+
+Every push and pull request runs the same public-page checks on a temporary copy of the site. The automated run checks all six viewport/browser profiles for horizontal overflow, but does not compare screenshots: browser font rendering can differ between the hosted runner and a developer's Mac. Screenshot comparisons remain part of the local pre-release check above.
+
 ## Signed-in wishlist inspection
 
 Use a dedicated test account, never a customer account:

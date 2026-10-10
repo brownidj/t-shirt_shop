@@ -1,0 +1,45 @@
+name: Responsive checks
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  responsive:
+    name: Responsive browser checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out the site
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install Python packages
+        run: pip install -r requirements.txt
+
+      - name: Prepare the local database
+        run: python manage.py migrate --noinput
+
+      - name: Install browser-test packages
+        run: npm ci
+
+      - name: Install test browsers
+        run: npx playwright install --with-deps chromium webkit
+
+      - name: Check responsive layouts
+        run: npm run test:responsive:ci

@@ -27,7 +27,7 @@ for (const [name, path] of pages) {
     await expect(page.locator("body")).toBeVisible();
     await expectNoHorizontalOverflow(page);
 
-    if (!process.env.LIVE_SMOKE && visualPages.has(name)) {
+    if (!process.env.LIVE_SMOKE && !process.env.RESPONSIVE_NO_SNAPSHOTS && visualPages.has(name)) {
       await expect(page).toHaveScreenshot(`${name}.png`, {
         animations: "disabled",
         fullPage: true,
