@@ -150,16 +150,14 @@
                                 </td>
                                 <td>
                                     <div class="btn-group">
-                                        {% if product %}
-                                            <a class="btn btn-secondary" href="{{ line.product.get_absolute_url }}">{% trans 'View product' %}</a>
-                                            <button class="btn btn-secondary dropdown-toggle" data-toggle="dropdown"></button>
-                                        {% else %}
-                                            <a class="btn btn-secondary dropdown-toggle" data-toggle="dropdown" href="#">{% trans 'Actions' %}</a>
-                                        {% endif %}
+                                        <button class="btn btn-secondary dropdown-toggle" type="button" data-toggle="dropdown">{% trans 'Actions' %}</button>
                                         <ul class="dropdown-menu dropdown-menu-right">
                                             {% if product %}
                                                 <li>
-                                                    <button type="submit" class="dropdown-item" formaction="{% url 'wishlist_add_to_cart' line.pk %}" formmethod="post">{% trans 'Add to cart' %}</button>
+                                                    <button type="submit" class="dropdown-item" formaction="{% url 'wishlist_add_to_cart' line.pk %}" formmethod="post">{% trans 'Add to Cart' %}</button>
+                                                </li>
+                                                <li>
+                                                    <a href="{{ line.product.get_absolute_url }}" class="dropdown-item">{% trans 'View product' %}</a>
                                                 </li>
                                             {% endif %}
                                             <li>
