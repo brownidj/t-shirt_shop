@@ -175,13 +175,13 @@ def _create_order_from_stripe_session(session):
     shipping_address = ShippingAddress(
         first_name=name_parts[0] if name_parts else "",
         last_name=name_parts[1] if len(name_parts) > 1 else "",
-        line1=_stripe_value(address, "line1", ""),
+        line1=_stripe_value(address, "line1") or "",
         line2=_stripe_value(address, "line2") or "",
-        line3=_stripe_value(address, "city", ""),
-        state=_stripe_value(address, "state", ""),
-        postcode=_stripe_value(address, "postal_code", ""),
+        line3=_stripe_value(address, "city") or "",
+        state=_stripe_value(address, "state") or "",
+        postcode=_stripe_value(address, "postal_code") or "",
         country=country,
-        phone_number=_stripe_value(customer, "phone", ""),
+        phone_number=_stripe_value(customer, "phone") or "",
     )
 
     currency = (_stripe_value(session, "currency") or "aud").upper()

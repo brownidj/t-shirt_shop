@@ -55,14 +55,18 @@ class StripeOrderCreationTests(TestCase):
         basket.refresh_from_db()
         self.assertEqual(basket.status, basket.SUBMITTED)
 
-    def test_paid_session_with_no_second_address_line_creates_an_order(self):
+    def test_paid_session_with_optional_address_fields_missing_creates_an_order(self):
         basket = create_basket()
         session = self.session_for(basket)
         session.shipping_details.address.line2 = None
+        session.shipping_details.address.state = None
+        session.customer_details.phone = None
 
         order = _create_order_from_stripe_session(session)
 
         self.assertEqual(order.shipping_address.line2, "")
+        self.assertEqual(order.shipping_address.state, "")
+        self.assertEqual(order.shipping_address.phone_number, "")
 
     def test_paid_account_session_appears_in_that_shoppers_order_history(self):
         basket = create_basket()
