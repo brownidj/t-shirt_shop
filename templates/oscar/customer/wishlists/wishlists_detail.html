@@ -157,6 +157,11 @@
                                             <a class="btn btn-secondary dropdown-toggle" data-toggle="dropdown" href="#">{% trans 'Actions' %}</a>
                                         {% endif %}
                                         <ul class="dropdown-menu dropdown-menu-right">
+                                            {% if product %}
+                                                <li>
+                                                    <button type="submit" class="dropdown-item" formaction="{% url 'wishlist_add_to_cart' line.pk %}" formmethod="post">{% trans 'Add to cart' %}</button>
+                                                </li>
+                                            {% endif %}
                                             <li>
                                                 <a href="{% url 'customer:wishlists-remove-product' key=wishlist.key line_pk=line.pk %}" class="dropdown-item">{% trans 'Remove' %}</a>
                                             </li>
