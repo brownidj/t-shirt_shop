@@ -38,6 +38,16 @@ module.exports = defineConfig({
         hasTouch: true,
       },
     },
+    {
+      name: "oppo-a96-cph2333",
+      use: {
+        browserName: "chromium",
+        viewport: { width: 360, height: 804 },
+        deviceScaleFactor: 3,
+        isMobile: true,
+        hasTouch: true,
+      },
+    },
     { name: "tablet", use: { browserName: "chromium", viewport: { width: 768, height: 1024 } } },
     {
       name: "ipad-mini-a17-pro",
@@ -50,6 +60,14 @@ module.exports = defineConfig({
       },
     },
     { name: "laptop", use: { browserName: "chromium", viewport: { width: 1366, height: 768 } } },
+    {
+      name: "macbook-pro-16-2019",
+      use: {
+        browserName: "chromium",
+        viewport: { width: 1536, height: 960 },
+        deviceScaleFactor: 2,
+      },
+    },
     { name: "desktop", use: { browserName: "chromium", viewport: { width: 1440, height: 900 } } },
     { name: "safari-phone", use: { browserName: "webkit", viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true } },
   ],

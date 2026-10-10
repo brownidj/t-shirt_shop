@@ -7,9 +7,11 @@ The responsive suite checks the shop at five representative viewport sizes:
 | Small phone | 390 x 844 |
 | Large phone | 430 x 932 |
 | iPhone 16 Pro | 402 x 874 |
+| OPPO A96 (CPH2333) | 360 x 804 |
 | Tablet | 768 x 1024 |
 | iPad mini (A17 Pro) | 744 x 1133 |
 | Laptop | 1366 x 768 |
+| MacBook Pro 16-inch (2019) | 1536 x 960 |
 | Desktop | 1440 x 900 |
 
 It also runs the small-phone checks in WebKit, the browser engine used by Safari.
