@@ -7,6 +7,25 @@
     {{ block.super }}
     <link rel="stylesheet" href="{% static "oscar/js/bootstrap4-datetimepicker/tempusdominus-bootstrap-4.min.css" %}" />
     <style>
+        .order-history-table {
+            width: 100%;
+            table-layout: fixed;
+        }
+
+        .order-history-table th:first-child,
+        .order-history-table td:first-child {
+            width: 60%;
+        }
+
+        .order-history-table th:not(:first-child),
+        .order-history-table td:not(:first-child) {
+            width: 13.33%;
+        }
+
+        .order-history-table td {
+            overflow-wrap: anywhere;
+        }
+
         @media (max-width: 991.98px) {
             .account-profile .page_inner > .row > .sidebar,
             .account-profile .page_inner > .row > .sidebar + div {
@@ -24,9 +43,7 @@
             .account-profile .sidebar .nav-link {
                 padding: 0.5rem 0.75rem;
             }
-        }
 
-        @media (max-width: 575.98px) {
             .order-history-table thead {
                 position: absolute;
                 width: 1px;
