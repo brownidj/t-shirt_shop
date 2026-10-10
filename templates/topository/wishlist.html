@@ -11,7 +11,14 @@
         .wishlist-item-controls { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
         .wishlist-item-actions { display: flex; flex-direction: column; align-items: flex-end; }
         .wishlist-item-actions__primary { display: flex; flex-direction: column; align-items: flex-end; gap: .5rem; }
-        .wishlist-quantity { width: 5rem; }
+        .wishlist-quantity-stepper { display: inline-flex; align-items: stretch; }
+        .wishlist-quantity { width: 3.5rem; text-align: center; border-radius: 0; }
+        .wishlist-quantity::-webkit-inner-spin-button,
+        .wishlist-quantity::-webkit-outer-spin-button { appearance: none; margin: 0; }
+        .wishlist-quantity[type=number] { appearance: textfield; -moz-appearance: textfield; }
+        .wishlist-quantity-stepper .btn { min-width: 2.5rem; padding: 0.375rem 0.5rem; }
+        .wishlist-quantity-decrease { border-top-right-radius: 0; border-bottom-right-radius: 0; }
+        .wishlist-quantity-increase { border-top-left-radius: 0; border-bottom-left-radius: 0; }
 
         @media (min-width: 1200px) {
             .wishlist-item-actions__primary { flex-direction: row; }
@@ -45,9 +52,15 @@
                                     <form method="post" action="{% url 'wishlist_update_quantity' line.pk %}">
                                         {% csrf_token %}
                                         <label class="sr-only" for="wishlist-quantity-{{ line.pk }}">{% trans "Quantity" %}</label>
-                                        <input id="wishlist-quantity-{{ line.pk }}" class="form-control wishlist-quantity wishlist-quantity-spinner" type="number"
-                                               name="quantity" value="{{ line.quantity }}" min="0" step="1"
-                                               data-previous-quantity="{{ line.quantity }}">
+                                        <div class="wishlist-quantity-stepper" role="group" aria-label="{% trans 'Quantity' %}">
+                                            <button class="btn btn-outline-secondary wishlist-quantity-decrease" type="button"
+                                                    data-quantity-adjust="-1" aria-label="{% trans 'Decrease quantity' %}">&minus;</button>
+                                            <input id="wishlist-quantity-{{ line.pk }}" class="form-control wishlist-quantity wishlist-quantity-spinner" type="number"
+                                                   name="quantity" value="{{ line.quantity }}" min="0" step="1"
+                                                   data-previous-quantity="{{ line.quantity }}">
+                                            <button class="btn btn-outline-secondary wishlist-quantity-increase" type="button"
+                                                    data-quantity-adjust="1" aria-label="{% trans 'Increase quantity' %}">+</button>
+                                        </div>
                                         <input type="hidden" name="confirm_removal" value="0">
                                     </form>
                                     <div class="wishlist-item-actions">
@@ -90,6 +103,15 @@
                     }
 
                     form.submit();
+                });
+            });
+
+            document.querySelectorAll("[data-quantity-adjust]").forEach(function (button) {
+                button.addEventListener("click", function () {
+                    var spinner = button.parentElement.querySelector(".wishlist-quantity-spinner");
+                    var quantity = Number(spinner.value) || 0;
+                    spinner.value = Math.max(0, quantity + Number(button.dataset.quantityAdjust));
+                    spinner.dispatchEvent(new Event("change"));
                 });
             });
         });
