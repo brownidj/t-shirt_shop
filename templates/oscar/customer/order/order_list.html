@@ -57,22 +57,30 @@
             }
 
             .order-history-table,
-            .order-history-table tbody,
-            .order-history-table tr,
-            .order-history-table td {
+            .order-history-table tbody {
                 display: block;
                 width: 100%;
             }
 
             .order-history-table tr {
-                margin-bottom: 1rem;
+                display: grid;
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                width: 100%;
+                margin-bottom: 0.75rem;
                 border: 1px solid #dee2e6;
             }
 
             .order-history-table td {
+                display: block;
+                width: auto !important;
                 border: 0;
                 padding: 0.65rem 0.75rem;
                 overflow-wrap: anywhere;
+            }
+
+            .order-history-table td:first-child {
+                grid-column: 1 / -1;
+                padding-bottom: 0.4rem;
             }
 
             .order-history-table td::before {
@@ -132,9 +140,9 @@
                 {% for order in orders %}
                     <tr>
                         <td data-label="{% trans 'Order number' %}"><a href="{% url 'customer:order' order_number=order.number %}">{{ order.number }}</a></td>
-                        <td data-label="{% trans 'Num items' %}">{{ order.num_items }}</td>
-                        <td data-label="{% trans 'Total inc tax' %}">{{ order.total_incl_tax|currency:order.currency }}</td>
-                        <td data-label="{% trans 'Date submitted' %}">{{ order.date_placed }}</td>
+                        <td data-label="{% trans 'Items' %}">{{ order.num_items }}</td>
+                        <td data-label="{% trans 'Total' %}">{{ order.total_incl_tax|currency:order.currency }}</td>
+                        <td data-label="{% trans 'Placed' %}">{{ order.date_placed }}</td>
                     </tr>
                 {% endfor %}
             </tbody>
