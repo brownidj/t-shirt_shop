@@ -49,7 +49,9 @@ RESPONSIVE_TEST_PASSWORD='password' \
 npm run test:responsive
 ```
 
-This opens the wishlist, checks the visible quantity controls, verifies no horizontal overflow, and saves an inspection screenshot. It does not alter the wishlist or start checkout.
+This signs in, opens the empty wishlist, verifies no horizontal overflow, and saves an inspection screenshot. It does not alter the wishlist or start checkout.
+
+GitHub automatically creates an empty disposable shopper in its temporary database, so the signed-in wishlist check runs there too. It never uses a live-shopper account or changes production data.
 
 ## Read-only live smoke check
 

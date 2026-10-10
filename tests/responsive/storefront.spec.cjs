@@ -43,12 +43,13 @@ test("signed-in wishlist can be inspected without changing it", async ({ page },
   );
 
   await page.goto("/accounts/login/", { waitUntil: "domcontentloaded" });
-  await page.locator('input[name="username"]').fill(process.env.RESPONSIVE_TEST_USERNAME);
-  await page.locator('input[name="password"]').fill(process.env.RESPONSIVE_TEST_PASSWORD);
+  await page.locator('input[name="login-username"]').fill(process.env.RESPONSIVE_TEST_USERNAME);
+  await page.locator('input[name="login-password"]').fill(process.env.RESPONSIVE_TEST_PASSWORD);
   await page.locator('button[type="submit"]').click();
+  await expect(page).not.toHaveURL(/\/accounts\/login\//);
   await page.goto("/wishlist/", { waitUntil: "domcontentloaded" });
 
   await expectNoHorizontalOverflow(page);
-  await expect(page.locator(".wishlist-quantity-stepper").first()).toBeVisible();
+  await expect(page.getByText("Your wishlist is empty.")).toBeVisible();
   await page.screenshot({ path: testInfo.outputPath("wishlist.png"), fullPage: true });
 });

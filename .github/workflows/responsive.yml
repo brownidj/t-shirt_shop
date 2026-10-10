@@ -12,6 +12,9 @@ jobs:
     name: Responsive browser checks
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      RESPONSIVE_TEST_USERNAME: responsive-checker
+      RESPONSIVE_TEST_PASSWORD: responsive-test-only
 
     steps:
       - name: Check out the site
@@ -34,6 +37,14 @@ jobs:
 
       - name: Prepare the local database
         run: python manage.py migrate --noinput
+
+      - name: Create disposable test shopper
+        run: >-
+          python manage.py shell -c "from django.contrib.auth import get_user_model;
+          User = get_user_model();
+          user, _ = User.objects.get_or_create(username='responsive-checker',
+          defaults={'email': 'responsive-checker@example.invalid', 'first_name': 'Responsive'});
+          user.set_password('responsive-test-only'); user.save()"
 
       - name: Install browser-test packages
         run: npm ci
