@@ -28,7 +28,27 @@ module.exports = defineConfig({
   projects: [
     { name: "phone-small", use: { browserName: "chromium", viewport: { width: 390, height: 844 } } },
     { name: "phone-large", use: { browserName: "chromium", viewport: { width: 430, height: 932 } } },
+    {
+      name: "iphone-16-pro",
+      use: {
+        browserName: "webkit",
+        viewport: { width: 402, height: 874 },
+        deviceScaleFactor: 3,
+        isMobile: true,
+        hasTouch: true,
+      },
+    },
     { name: "tablet", use: { browserName: "chromium", viewport: { width: 768, height: 1024 } } },
+    {
+      name: "ipad-mini-a17-pro",
+      use: {
+        browserName: "webkit",
+        viewport: { width: 744, height: 1133 },
+        deviceScaleFactor: 2,
+        isMobile: true,
+        hasTouch: true,
+      },
+    },
     { name: "laptop", use: { browserName: "chromium", viewport: { width: 1366, height: 768 } } },
     { name: "desktop", use: { browserName: "chromium", viewport: { width: 1440, height: 900 } } },
     { name: "safari-phone", use: { browserName: "webkit", viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true } },
