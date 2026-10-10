@@ -1,0 +1,21 @@
+{% extends "oscar/customer/order/order_detail.html" %}
+
+{% block extrastyles %}
+    {{ block.super }}
+    <style>
+        .stripe-order-number {
+            display: block;
+            font-size: 1.25rem;
+            line-height: 1.3;
+            overflow-wrap: anywhere;
+        }
+
+        .breadcrumb-item.active {
+            overflow-wrap: anywhere;
+        }
+    </style>
+{% endblock %}
+
+{% block headertext %}
+    <span class="stripe-order-number">{{ page_title }}</span>
+{% endblock %}
