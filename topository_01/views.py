@@ -94,6 +94,49 @@ def _stripe_shipping_details(session):
     )
 
 
+def _default_shipping_address(user):
+    """Return the shopper's preferred saved delivery address, if available."""
+    addresses = user.addresses.select_related("country")
+    return addresses.filter(is_default_for_shipping=True).first() or addresses.order_by(
+        "-num_orders_as_shipping_address", "-date_created"
+    ).first()
+
+
+def _stripe_customer_for_user(stripe, user):
+    """Create or update a Stripe Customer from a shopper's saved delivery address."""
+    address = _default_shipping_address(user)
+    if not address or not user.email:
+        return None
+
+    name = " ".join(part for part in (address.first_name, address.last_name) if part)
+    customer_data = {
+        "email": user.email,
+        "name": name,
+        "metadata": {"topository_user_id": str(user.id)},
+        "shipping": {
+            "name": name,
+            "phone": address.phone_number or None,
+            "address": {
+                "line1": address.line1,
+                "line2": address.line2 or None,
+                "city": address.line3 or "",
+                "state": address.state or "",
+                "postal_code": address.postcode,
+                "country": address.country.iso_3166_1_a2,
+            },
+        },
+    }
+    customers = stripe.Customer.list(email=user.email, limit=100)
+    for customer in _stripe_value(customers, "data", []):
+        if _stripe_value(_stripe_value(customer, "metadata", {}), "topository_user_id") == str(
+            user.id
+        ):
+            stripe.Customer.modify(_stripe_value(customer, "id"), **customer_data)
+            return _stripe_value(customer, "id")
+    customer = stripe.Customer.create(**customer_data)
+    return _stripe_value(customer, "id")
+
+
 def _create_order_from_stripe_session(session):
     """Create one Oscar order for a paid Checkout Session, idempotently."""
     if _stripe_value(session, "payment_status") != "paid":
@@ -209,20 +252,27 @@ def stripe_checkout(request):
             messages.error(request, "One or more basket items cannot be priced.")
             return redirect("basket:summary")
         line_items.append({"price_data": {"currency": "aud", "unit_amount": int((price * 100).quantize(Decimal("1"), rounding=ROUND_HALF_UP)), "product_data": {"name": line.description}, "tax_behavior": "inclusive"}, "quantity": line.quantity})
+    checkout_data = {
+        "mode": "payment",
+        "line_items": line_items,
+        "shipping_address_collection": {"allowed_countries": ["AU"]},
+        "shipping_options": [{"shipping_rate_data": {"display_name": "Standard shipping", "type": "fixed_amount", "fixed_amount": {"amount": settings.STRIPE_SHIPPING_CENTS, "currency": "aud"}, "tax_behavior": "inclusive"}}],
+        "metadata": {
+            "basket_id": str(request.basket.id),
+            "user_id": str(request.user.id) if request.user.is_authenticated else "",
+        },
+        "client_reference_id": str(request.basket.id),
+        "success_url": request.build_absolute_uri(reverse("stripe_checkout_success")) + "?session_id={CHECKOUT_SESSION_ID}",
+        "cancel_url": request.build_absolute_uri(reverse("stripe_checkout_cancel")),
+    }
     try:
-        session = stripe.checkout.Session.create(
-            mode="payment", line_items=line_items,
-            shipping_address_collection={"allowed_countries": ["AU"]},
-            shipping_options=[{"shipping_rate_data": {"display_name": "Standard shipping", "type": "fixed_amount", "fixed_amount": {"amount": settings.STRIPE_SHIPPING_CENTS, "currency": "aud"}, "tax_behavior": "inclusive"}}],
-            metadata={
-                "basket_id": str(request.basket.id),
-                "user_id": str(request.user.id) if request.user.is_authenticated else "",
-            },
-            client_reference_id=str(request.basket.id),
-            success_url=request.build_absolute_uri(reverse("stripe_checkout_success")) + "?session_id={CHECKOUT_SESSION_ID}",
-            cancel_url=request.build_absolute_uri(reverse("stripe_checkout_cancel")),
-            customer_email=request.user.email if request.user.is_authenticated else None,
-        )
+        if request.user.is_authenticated:
+            customer_id = _stripe_customer_for_user(stripe, request.user)
+            if customer_id:
+                checkout_data["customer"] = customer_id
+            else:
+                checkout_data["customer_email"] = request.user.email
+        session = stripe.checkout.Session.create(**checkout_data)
     except stripe.StripeError:
         messages.error(request, "Stripe could not start checkout. Please try again.")
         return redirect("basket:summary")

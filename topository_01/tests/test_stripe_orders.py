@@ -5,7 +5,7 @@ from django.test import TestCase
 from oscar.core.loading import get_model
 from oscar.test.factories import create_basket
 
-from topository_01.views import _create_order_from_stripe_session
+from topository_01.views import _create_order_from_stripe_session, _stripe_customer_for_user
 
 
 Country = get_model("address", "Country")
@@ -77,3 +77,51 @@ class StripeOrderCreationTests(TestCase):
         second_order = _create_order_from_stripe_session(session)
 
         self.assertEqual(first_order.pk, second_order.pk)
+
+
+class StripeCustomerTests(TestCase):
+    def setUp(self):
+        self.country = Country.objects.create(
+            iso_3166_1_a2="AU", printable_name="Australia"
+        )
+        self.user = get_user_model().objects.create_user(
+            username="shopper", email="shopper@example.test", password="safe-test-password"
+        )
+        self.address = self.user.addresses.create(
+            first_name="Ada",
+            last_name="Lovelace",
+            line1="1 Example Street",
+            line3="Townsville",
+            state="Queensland",
+            postcode="4810",
+            country=self.country,
+            phone_number="0400 000 000",
+            is_default_for_shipping=True,
+        )
+
+    def test_saved_delivery_address_creates_a_stripe_customer(self):
+        customer_api = SimpleNamespace(
+            list=lambda **kwargs: SimpleNamespace(data=[]),
+            create=lambda **kwargs: SimpleNamespace(id="cus_topository"),
+        )
+        stripe = SimpleNamespace(Customer=customer_api)
+
+        customer_id = _stripe_customer_for_user(stripe, self.user)
+
+        self.assertEqual(customer_id, "cus_topository")
+
+    def test_existing_customer_is_updated_from_saved_delivery_address(self):
+        customer = SimpleNamespace(
+            id="cus_existing", metadata={"topository_user_id": str(self.user.id)}
+        )
+        updates = []
+        customer_api = SimpleNamespace(
+            list=lambda **kwargs: SimpleNamespace(data=[customer]),
+            modify=lambda customer_id, **kwargs: updates.append((customer_id, kwargs)),
+        )
+        stripe = SimpleNamespace(Customer=customer_api)
+
+        customer_id = _stripe_customer_for_user(stripe, self.user)
+
+        self.assertEqual(customer_id, "cus_existing")
+        self.assertEqual(updates[0][1]["shipping"]["address"]["line1"], "1 Example Street")
