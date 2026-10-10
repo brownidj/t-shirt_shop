@@ -176,7 +176,7 @@ def _create_order_from_stripe_session(session):
         first_name=name_parts[0] if name_parts else "",
         last_name=name_parts[1] if len(name_parts) > 1 else "",
         line1=_stripe_value(address, "line1", ""),
-        line2=_stripe_value(address, "line2", ""),
+        line2=_stripe_value(address, "line2") or "",
         line3=_stripe_value(address, "city", ""),
         state=_stripe_value(address, "state", ""),
         postcode=_stripe_value(address, "postal_code", ""),
