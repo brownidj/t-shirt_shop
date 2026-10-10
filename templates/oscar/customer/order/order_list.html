@@ -2,6 +2,7 @@
 {% load currency_filters %}
 {% load i18n %}
 {% load static %}
+{% load widget_tweaks %}
 
 {% block styles %}
     {{ block.super }}
@@ -24,6 +25,30 @@
 
         .order-history-table td {
             overflow-wrap: anywhere;
+        }
+
+        .order-filter {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            gap: 0.75rem;
+        }
+
+        .order-filter .filter-field {
+            margin: 0;
+        }
+
+        .order-filter .date-field .input-group {
+            width: 9rem;
+        }
+
+        .order-filter .order-number-field input {
+            width: 13rem;
+        }
+
+        .order-filter label {
+            display: block;
+            margin-bottom: 0.25rem;
         }
 
         @media (max-width: 991.98px) {
@@ -112,11 +137,27 @@
 {% block tabcontent %}
     {% if orders or form.is_bound %}
         <div class="card card-body bg-light">
-            <h2>{% trans "Filter" %}</h2>
             <form method="get">
-                {% include "oscar/partials/form_fields.html" with form=form style='horizontal' %}
-                <div class="form-group row">
-                    <div class="offset-sm-4 col-sm-8">
+                {% for error in form.non_field_errors %}
+                    <p class="error-block"><i class="fas fa-exclamation"></i> {{ error }}</p>
+                {% endfor %}
+                <div class="order-filter">
+                    <div class="filter-field date-field">
+                        <label for="{{ form.date_from.auto_id }}">{{ form.date_from.label }}</label>
+                        {% render_field form.date_from class+="form-control form-control-sm" %}
+                        {% for error in form.date_from.errors %}<span class="error-block">{{ error }}</span>{% endfor %}
+                    </div>
+                    <div class="filter-field date-field">
+                        <label for="{{ form.date_to.auto_id }}">{{ form.date_to.label }}</label>
+                        {% render_field form.date_to class+="form-control form-control-sm" %}
+                        {% for error in form.date_to.errors %}<span class="error-block">{{ error }}</span>{% endfor %}
+                    </div>
+                    <div class="filter-field order-number-field">
+                        <label for="{{ form.order_number.auto_id }}">{{ form.order_number.label }}</label>
+                        {% render_field form.order_number class+="form-control form-control-sm" %}
+                        {% for error in form.order_number.errors %}<span class="error-block">{{ error }}</span>{% endfor %}
+                    </div>
+                    <div class="filter-field">
                         <button type="submit" class="btn btn-primary" data-loading-text="{% trans 'Filtering...' %}">{% trans 'Filter results' %}</button>
                         <a href="{% url 'customer:order-list' %}" class="btn btn-secondary">{% trans 'Reset' %}</a>
                     </div>
