@@ -1,4 +1,5 @@
 {% extends "oscar/customer/order/order_detail.html" %}
+{% load i18n %}
 
 {% block extrastyles %}
     {{ block.super }}
@@ -18,4 +19,14 @@
 
 {% block headertext %}
     <span class="stripe-order-number">{{ page_title }}</span>
+{% endblock %}
+
+{% block breadcrumbs %}
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ homepage_url }}">{% trans 'Home' %}</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'customer:summary' %}">{% trans 'Account' %}</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{% trans 'Order history' %}</li>
+        </ol>
+    </nav>
 {% endblock %}
