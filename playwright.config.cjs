@@ -5,6 +5,7 @@ const usesExternalServer = Boolean(process.env.BASE_URL);
 
 module.exports = defineConfig({
   testDir: "./tests/responsive",
+  globalSetup: "./tests/responsive/global-setup.cjs",
   timeout: 30_000,
   expect: {
     timeout: 10_000,

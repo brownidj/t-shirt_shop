@@ -29,7 +29,7 @@ npx playwright install
 npm run test:responsive
 ```
 
-This starts a local Django server automatically and checks the home page, catalogue, login, design-request, basket, and signed-in empty wishlist pages. It creates a one-use test shopper, removes it after the run, verifies that none overflow horizontally, and compares stable pages with approved screenshots. The first run creates the screenshots; approve intentional design changes with:
+This starts a local Django server automatically and checks the home page, catalogue, login, design-request, basket, and signed-in empty wishlist pages. Playwright itself creates a one-use test shopper for local runs, then removes it after the run, so this also works when Playwright is run directly. It verifies that none overflow horizontally and compares stable pages with approved screenshots. The first run creates the screenshots; approve intentional design changes with:
 
 ```sh
 npm run test:responsive:update
