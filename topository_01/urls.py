@@ -19,6 +19,8 @@ urlpatterns = [
         views.transfer_basket_line_to_wishlist,
         name="basket_transfer_to_wishlist",
     ),
+    path("accounts/wishlists/", views.account_wishlist_redirect),
+    path("accounts/wishlists/<str:key>/", views.account_wishlist_redirect),
     path("wishlist/", views.wishlist_view, name="wishlist"),
     path(
         "wishlist/lines/<int:line_id>/add-to-cart/",

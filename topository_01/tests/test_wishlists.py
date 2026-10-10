@@ -65,6 +65,27 @@ class BasketWishlistTransferTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, self.line.description)
 
+    def test_default_wishlist_is_named_after_the_shopper(self):
+        self.user.first_name = "Ada"
+        self.user.save(update_fields=["first_name"])
+        wishlist = self.user.wishlists.create()
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse("wishlist"))
+
+        self.assertEqual(response.status_code, 200)
+        wishlist.refresh_from_db()
+        self.assertEqual(wishlist.name, "Ada")
+        self.assertContains(response, "Ada's Wishlist")
+
+    def test_account_wishlist_links_use_the_storefront_wishlist(self):
+        wishlist = self.user.wishlists.create()
+        self.client.force_login(self.user)
+
+        response = self.client.get(f"/accounts/wishlists/{wishlist.key}/")
+
+        self.assertRedirects(response, reverse("wishlist"), fetch_redirect_response=False)
+
     def test_wishlist_page_shows_an_unconfigured_design(self):
         wishlist = self.user.wishlists.create()
         wishlist.add(self.line.product)

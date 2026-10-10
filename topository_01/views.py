@@ -56,6 +56,20 @@ UserAddress = get_model("address", "UserAddress")
 WishlistLine = get_model("wishlists", "Line")
 
 
+def _shopper_wishlist_name(user):
+    """Return the name used for a shopper's primary wishlist."""
+    return user.first_name.strip() or user.get_username()
+
+
+def _default_wishlist(user):
+    """Return the primary wishlist, giving legacy defaults a personal name."""
+    wishlist = user.wishlists.order_by("date_created").first()
+    if wishlist is not None and wishlist.name == "Default":
+        wishlist.name = _shopper_wishlist_name(user)
+        wishlist.save(update_fields=["name"])
+    return wishlist
+
+
 class AccountAuthView(OscarAccountAuthView):
     login_form_class = UsernameOrEmailAuthenticationForm
     registration_form_class = CustomerRegistrationForm
@@ -454,9 +468,11 @@ def transfer_basket_line_to_wishlist(request):
             request.basket.lines.select_related("product").select_for_update(),
             pk=int(line_id),
         )
-        wishlist = request.user.wishlists.order_by("date_created").first()
+        wishlist = _default_wishlist(request.user)
         if wishlist is None:
-            wishlist = request.user.wishlists.create()
+            wishlist = request.user.wishlists.create(
+                name=_shopper_wishlist_name(request.user)
+            )
 
         wishlist_line, created = wishlist.lines.get_or_create(
             product=line.product,
@@ -477,7 +493,7 @@ def transfer_basket_line_to_wishlist(request):
 @login_required
 def wishlist_view(request):
     """Show the current shopper's default wishlist."""
-    wishlist = request.user.wishlists.order_by("date_created").first()
+    wishlist = _default_wishlist(request.user)
     wishlist_lines = ()
     if wishlist is not None:
         wishlist_lines = wishlist.lines.filter(product__isnull=False).select_related(
@@ -488,6 +504,13 @@ def wishlist_view(request):
         "topository/wishlist.html",
         {"wishlist": wishlist, "wishlist_lines": wishlist_lines},
     )
+
+
+@login_required
+def account_wishlist_redirect(request, key=None):
+    """Use the storefront wishlist for account wishlist links as well."""
+    _default_wishlist(request.user)
+    return redirect("wishlist")
 
 
 @login_required
@@ -877,9 +900,11 @@ def add_configured_tshirt(request, product_id, *, save_to_wishlist=False):
         )
 
     if save_to_wishlist:
-        wishlist = request.user.wishlists.order_by("date_created").first()
+        wishlist = _default_wishlist(request.user)
         if wishlist is None:
-            wishlist = request.user.wishlists.create()
+            wishlist = request.user.wishlists.create(
+                name=_shopper_wishlist_name(request.user)
+            )
         wishlist.add(child)
         messages.success(request, f"{child.title} was added to your wishlist.")
         return redirect("wishlist")

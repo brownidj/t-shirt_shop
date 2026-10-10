@@ -2,8 +2,8 @@
 {% load i18n %}
 {% load image_tags %}
 
-{% block title %}{% trans "Wishlist" %} | {{ block.super }}{% endblock %}
-{% block headertext %}{% trans "Wishlist" %}{% endblock %}
+{% block title %}{% if wishlist %}{{ wishlist.name }}'s {% trans "Wishlist" %}{% else %}{% trans "Wishlist" %}{% endif %} | {{ block.super }}{% endblock %}
+{% block headertext %}{% if wishlist %}{{ wishlist.name }}'s {% trans "Wishlist" %}{% else %}{% trans "Wishlist" %}{% endif %}{% endblock %}
 
 {% block extrastyles %}
     {{ block.super }}
