@@ -45,9 +45,10 @@
                                     <form method="post" action="{% url 'wishlist_update_quantity' line.pk %}">
                                         {% csrf_token %}
                                         <label class="sr-only" for="wishlist-quantity-{{ line.pk }}">{% trans "Quantity" %}</label>
-                                        <input id="wishlist-quantity-{{ line.pk }}" class="form-control wishlist-quantity" type="number"
+                                        <input id="wishlist-quantity-{{ line.pk }}" class="form-control wishlist-quantity wishlist-quantity-spinner" type="number"
                                                name="quantity" value="{{ line.quantity }}" min="0" step="1"
-                                               onchange="this.form.submit()">
+                                               data-previous-quantity="{{ line.quantity }}">
+                                        <input type="hidden" name="confirm_removal" value="0">
                                     </form>
                                     <div class="wishlist-item-actions">
                                         <div class="wishlist-item-actions__primary">
@@ -69,4 +70,28 @@
         <p>{% trans "Your wishlist is empty." %}</p>
         <a class="btn btn-primary" href="{% url 'catalogue:index' %}">{% trans "Browse store" %}</a>
     {% endif %}
+{% endblock %}
+
+{% block extrascripts %}
+    {{ block.super }}
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            document.querySelectorAll(".wishlist-quantity-spinner").forEach(function (spinner) {
+                spinner.addEventListener("change", function () {
+                    var form = spinner.form;
+                    var quantity = Number(spinner.value);
+
+                    if (quantity === 0) {
+                        if (!window.confirm("Remove this item from your wishlist?")) {
+                            spinner.value = spinner.dataset.previousQuantity;
+                            return;
+                        }
+                        form.querySelector('[name="confirm_removal"]').value = "1";
+                    }
+
+                    form.submit();
+                });
+            });
+        });
+    </script>
 {% endblock %}

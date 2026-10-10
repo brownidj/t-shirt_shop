@@ -129,7 +129,8 @@ class BasketWishlistTransferTests(TestCase):
         wishlist.add(self.line.product)
         wishlist_line = wishlist.lines.get(product=self.line.product)
         request = RequestFactory().post(
-            reverse("wishlist_update_quantity", args=[wishlist_line.pk]), {"quantity": 0}
+            reverse("wishlist_update_quantity", args=[wishlist_line.pk]),
+            {"quantity": 0, "confirm_removal": "1"},
         )
         request.user = self.user
         SessionMiddleware(lambda request: None).process_request(request)
@@ -141,6 +142,22 @@ class BasketWishlistTransferTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response["Location"], reverse("wishlist"))
         self.assertFalse(wishlist.lines.filter(pk=wishlist_line.pk).exists())
+
+    def test_zero_quantity_keeps_item_without_removal_confirmation(self):
+        wishlist = self.user.wishlists.create()
+        wishlist.add(self.line.product)
+        wishlist_line = wishlist.lines.get(product=self.line.product)
+        request = RequestFactory().post(
+            reverse("wishlist_update_quantity", args=[wishlist_line.pk]), {"quantity": 0}
+        )
+        request.user = self.user
+        SessionMiddleware(lambda request: None).process_request(request)
+        request.session.save()
+        request._messages = FallbackStorage(request)
+
+        update_wishlist_line_quantity(request, wishlist_line.pk)
+
+        self.assertTrue(wishlist.lines.filter(pk=wishlist_line.pk).exists())
 
     def test_quantity_update_changes_the_saved_quantity(self):
         wishlist = self.user.wishlists.create()

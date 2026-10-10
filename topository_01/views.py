@@ -564,10 +564,12 @@ def update_wishlist_line_quantity(request, line_id):
 
     if quantity < 0:
         messages.error(request, "Quantity cannot be negative.")
-    elif quantity == 0:
+    elif quantity == 0 and request.POST.get("confirm_removal") == "1":
         title = wishlist_line.get_title()
         wishlist_line.delete()
         messages.success(request, f"{title} was removed from your wishlist.")
+    elif quantity == 0:
+        messages.info(request, "Confirm removal to remove this item from your wishlist.")
     else:
         wishlist_line.quantity = quantity
         wishlist_line.save(update_fields=["quantity"])
