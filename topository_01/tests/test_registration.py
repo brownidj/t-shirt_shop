@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 
-from topository_01.forms import CustomerRegistrationForm
+from topository_01.forms import CustomerProfileForm, CustomerRegistrationForm
 
 
 class CustomerRegistrationFormTests(TestCase):
@@ -36,3 +36,18 @@ class CustomerRegistrationFormTests(TestCase):
         user = form.save()
 
         self.assertEqual(user.username, "new-shopper")
+
+    def test_profile_requires_a_first_name(self):
+        user = get_user_model().objects.create_user(
+            username="existing-shopper",
+            email="existing@example.test",
+            password="password",
+        )
+
+        form = CustomerProfileForm(
+            user,
+            data={"first_name": "", "last_name": "Shopper", "email": user.email},
+        )
+
+        self.assertFalse(form.is_valid())
+        self.assertIn("first_name", form.errors)

@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.apps import apps
+from django.contrib.auth.decorators import login_required
 from django.urls import path, include, re_path
 from django.conf import settings
 from django.conf.urls.static import static
@@ -39,6 +40,10 @@ urlpatterns = [
     ),
     path("accounts/login/", views.AccountAuthView.as_view()),
     path("accounts/register/", views.AccountRegistrationView.as_view()),
+    path(
+        "accounts/profile/edit/",
+        login_required(views.ProfileUpdateView.as_view()),
+    ),
     path("admin/", admin.site.urls),
     # Include Oscar without an outer namespace so child namespaces (e.g. 'dashboard') stay top-level
 

@@ -6,6 +6,7 @@ from django.utils.translation import gettext_lazy as _
 from oscar.apps.customer.forms import (
     EmailAuthenticationForm as OscarEmailAuthenticationForm,
     EmailUserCreationForm as OscarEmailUserCreationForm,
+    UserForm as OscarUserForm,
 )
 
 from .models import DesignRequest, MarketingConsent
@@ -105,3 +106,11 @@ class CustomerRegistrationForm(OscarEmailUserCreationForm):
                 MarketingConsent.objects.update_or_create(user=user)
 
         return user
+
+
+class CustomerProfileForm(OscarUserForm):
+    """Keep the profile name required after registration as well."""
+
+    def __init__(self, user, *args, **kwargs):
+        super().__init__(user, *args, **kwargs)
+        self.fields["first_name"].required = True

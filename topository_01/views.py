@@ -21,6 +21,7 @@ from django.views.decorators.http import require_POST
 from oscar.apps.customer.views import (
     AccountAuthView as OscarAccountAuthView,
     AccountRegistrationView as OscarAccountRegistrationView,
+    ProfileUpdateView as OscarProfileUpdateView,
 )
 from oscar.apps.catalogue.models import (
     AttributeOption,
@@ -40,6 +41,7 @@ from PIL import Image, ImageChops
 from django.conf import settings
 
 from .forms import (
+    CustomerProfileForm,
     CustomerRegistrationForm,
     DesignRequestForm,
     UsernameOrEmailAuthenticationForm,
@@ -77,6 +79,10 @@ class AccountAuthView(OscarAccountAuthView):
 
 class AccountRegistrationView(OscarAccountRegistrationView):
     form_class = CustomerRegistrationForm
+
+
+class ProfileUpdateView(OscarProfileUpdateView):
+    form_class = CustomerProfileForm
 
 
 def _stripe():
