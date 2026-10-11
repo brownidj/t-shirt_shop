@@ -421,8 +421,34 @@ WOMENS_MAPLE_TEE_COLOURS = frozenset(
 
 def slideshow_home(request):
     """Show catalogue artwork, linked to its corresponding product page."""
+    category_order = {
+        "Paleontology": 0,
+        "Scuba": 1,
+        "Animals": 2,
+        "Astrophysics": 3,
+    }
+
+    def slideshow_sort_key(product_image):
+        """Put requested catalogue categories first, then order designs by title."""
+        product_categories = product_image.product.categories.all()
+        category_position = min(
+            (
+                category_order.get(category.name, len(category_order))
+                for category in product_categories
+            ),
+            default=len(category_order),
+        )
+        return (
+            category_position,
+            product_image.product.title.casefold(),
+            product_image.original.name.casefold(),
+        )
+
     slides = []
-    for product_image in ProductImage.objects.select_related("product").order_by("original"):
+    product_images = ProductImage.objects.select_related("product").prefetch_related(
+        "product__categories"
+    )
+    for product_image in sorted(product_images, key=slideshow_sort_key):
         if not product_image.original:
             continue
 
