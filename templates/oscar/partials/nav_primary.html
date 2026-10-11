@@ -70,11 +70,6 @@
                     </span>
                 {% endif %}
             {% endif %}
-            {% if product and product.product_class.name == "Designs" %}
-                <button id="add-to-cart" form="tshirt-add-form" type="submit" class="btn btn-primary mr-2" disabled>
-                    {% trans "Add to cart" %}
-                </button>
-            {% endif %}
             {% if request.path != basket_summary_url %}
                 {% if request.basket.is_empty %}
                     <span class="btn btn-outline-secondary text-muted" aria-label="{% trans 'Cart is empty' %}"

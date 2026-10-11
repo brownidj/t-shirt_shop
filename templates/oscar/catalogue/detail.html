@@ -71,20 +71,19 @@
             clear: both;
         }
         .variant-panel-preview img { display: block; }
+        .variant-panel-purchase-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: .75rem;
+            margin-top: .75rem;
+        }
         #variant-price {
-            position: absolute;
-            right: 0;
-            bottom: 0;
-            z-index: 1;
             margin: 0;
-            padding: .35rem .55rem;
-            background: #000000;
-            color: #ffffff;
-            font-size: 1rem;
+            font-size: 1.25rem;
             font-weight: 600;
             line-height: 1.2;
             white-space: nowrap;
-            pointer-events: none;
         }
         .login-tooltip { position: relative; display: inline-block; }
         .login-tooltip__message {
@@ -240,7 +239,12 @@
                     <div class="card-body">
                         <div class="variant-panel-preview">
                             <img id="variant-panel-image" class="img-fluid" alt="">
+                        </div>
+                        <div class="variant-panel-purchase-row">
                             <p id="variant-price" aria-live="polite"></p>
+                            <button id="add-to-cart" form="tshirt-add-form" type="submit" class="btn btn-primary" disabled>
+                                {% trans "Add to cart" %}
+                            </button>
                         </div>
                     </div>
                 </div>
