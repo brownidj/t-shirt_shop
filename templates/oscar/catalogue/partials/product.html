@@ -12,6 +12,10 @@
             vertical-align: top;
         }
 
+        .product_pod:has(.product-description-tooltip) {
+            overflow: visible;
+        }
+
         .product-description-tooltip__trigger {
             display: inline-grid;
             width: 1.35rem;
@@ -42,6 +46,8 @@
             font-weight: 400;
             line-height: 1.35;
             text-align: left;
+            white-space: normal;
+            overflow-wrap: anywhere;
             visibility: hidden;
             opacity: 0;
             transition: opacity .15s ease-in-out;
