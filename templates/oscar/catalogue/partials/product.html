@@ -4,6 +4,55 @@
 {% load reviews_tags %}
 
 {% block product %}
+    <style>
+        .product-description-tooltip {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            vertical-align: top;
+        }
+
+        .product-description-tooltip__trigger {
+            display: inline-grid;
+            width: 1.35rem;
+            height: 1.35rem;
+            place-items: center;
+            margin-left: .3rem;
+            border: 1px solid #0d6efd;
+            border-radius: 50%;
+            background: #ffffff;
+            color: #0d6efd;
+            cursor: help;
+            font-size: .85rem;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .product-description-tooltip__content {
+            position: absolute;
+            z-index: 20;
+            top: calc(100% + .4rem);
+            left: 0;
+            width: min(18rem, calc(100vw - 2rem));
+            padding: .65rem .75rem;
+            border-radius: .25rem;
+            background: #343a40;
+            color: #ffffff;
+            font-size: .875rem;
+            font-weight: 400;
+            line-height: 1.35;
+            text-align: left;
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity .15s ease-in-out;
+        }
+
+        .product-description-tooltip:hover .product-description-tooltip__content,
+        .product-description-tooltip:focus-within .product-description-tooltip__content {
+            visibility: visible;
+            opacity: 1;
+        }
+    </style>
     <article class="product_pod">
         <div class="product-card-content" style="display: table; margin: 0 auto;">
             {% block product_title %}
@@ -11,6 +60,17 @@
                     <a href="{{ product.get_absolute_url }}" title="{{ product.get_title }}">
                         {{ product.get_title|truncatewords:4 }}
                     </a>
+                    {% if product.description %}
+                        <span class="product-description-tooltip">
+                            <button type="button" class="product-description-tooltip__trigger"
+                                    aria-label="{% blocktrans with product_title=product.get_title %}Read the full description for {{ product_title }}{% endblocktrans %}">
+                                i
+                            </button>
+                            <span class="product-description-tooltip__content" role="tooltip">
+                                {{ product.description|striptags }}
+                            </span>
+                        </span>
+                    {% endif %}
                 </h3>
             {% endblock %}
 
