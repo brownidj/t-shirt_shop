@@ -54,6 +54,14 @@
             padding-left: 10px;
         }
 
+        /* Oscar reserves 380px for every product card.  Our compact cards
+           need only the room their actual title, image, description and price use. */
+        .catalogue-product-grid .product_pod {
+            height: auto;
+            min-height: 0;
+            margin: .35rem 0 .75rem;
+        }
+
         @media (min-width: 768px) {
             .page .page_inner > .row > .sidebar {
                 flex: 0 0 33.333333%;
