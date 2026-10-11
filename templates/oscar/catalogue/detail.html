@@ -222,7 +222,7 @@
                 <div class="design-artwork">
                     <button type="button" class="artwork-image-trigger" data-artwork-lightbox-open
                             aria-label="{% trans 'View a larger version of this artwork' %}">
-                        <img src="{{ product.primary_image.original.url }}"
+                        <img src="{{ product.primary_image.original.url }}?v={{ product.primary_image.original.size }}"
                              alt="{{ product.get_title }}"
                              class="img-fluid">
                     </button>
@@ -823,7 +823,7 @@
             <div class="artwork-lightbox__content">
                 <button type="button" class="artwork-lightbox__close" data-artwork-lightbox-close
                         aria-label="{% trans 'Close larger image' %}">&times;</button>
-                <img class="artwork-lightbox__image" src="{{ product.primary_image.original.url }}"
+                <img class="artwork-lightbox__image" src="{{ product.primary_image.original.url }}?v={{ product.primary_image.original.size }}"
                      alt="{{ product.get_title }}">
             </div>
         </div>
