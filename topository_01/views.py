@@ -444,6 +444,17 @@ def slideshow_home(request):
             product_image.original.name.casefold(),
         )
 
+    def slideshow_category(product_image):
+        """Return the category that determines a slide's place in the sequence."""
+        categories = sorted(
+            product_image.product.categories.all(),
+            key=lambda category: (
+                category_order.get(category.name, len(category_order)),
+                category.name.casefold(),
+            ),
+        )
+        return categories[0].name if categories else "Other designs"
+
     slides = []
     product_images = ProductImage.objects.select_related("product").prefetch_related(
         "product__categories"
@@ -459,6 +470,7 @@ def slideshow_home(request):
                 # an earlier image with stale borders or other old pixels.
                 "url": f"{product_image.original.url}?v={image_path.stat().st_mtime_ns}",
                 "alt": product_image.product.title,
+                "category": slideshow_category(product_image),
                 "product_url": product_image.product.get_absolute_url(),
             }
         )

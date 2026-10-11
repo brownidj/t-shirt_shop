@@ -24,9 +24,12 @@
 {% block content %}
     {% if slides %}
         <section class="artwork-slideshow" aria-label="Featured artwork">
-            <p class="slideshow-title">Custom designs</p>
+            <div class="slideshow-heading">
+                <p class="slideshow-title">Custom designs</p>
+                <p class="slideshow-category" aria-live="polite">{{ slides.0.category }}</p>
+            </div>
             {% for slide in slides %}
-                <figure class="artwork-slide{% if forloop.first %} is-active{% endif %}">
+                <figure class="artwork-slide{% if forloop.first %} is-active{% endif %}" data-category="{{ slide.category }}">
                     <a class="artwork-slide-link" href="{{ slide.product_url }}" aria-label="View {{ slide.alt }}">
                         <img src="{{ slide.url }}" alt="{{ slide.alt }}">
                     </a>
@@ -67,18 +70,26 @@
         }
         .header .h1 > small { margin: 0 0 0 auto; text-align: right; transform: translateY(20px); }
         .artwork-slideshow { position: relative; box-sizing: border-box; height: calc(70vh - 136px); padding-top: 80px; background: #111; overflow: hidden; }
-        .slideshow-title {
+        .slideshow-heading {
             position: absolute;
             top: calc(1rem - 6px);
             left: 1rem;
+            right: 1rem;
             z-index: 2;
+            display: flex;
+            align-items: baseline;
+            gap: 1rem;
+        }
+        .slideshow-title,
+        .slideshow-category {
             margin: 0;
             color: #fff;
             font-family: Avenir, sans-serif;
-            font-size: 28pt;
             font-weight: 400;
             line-height: 1.1;
         }
+        .slideshow-title { font-size: clamp(1.125rem, 2vw, 1.5rem); }
+        .slideshow-category { margin-left: auto; font-size: clamp(1rem, 1.6vw, 1.25rem); text-align: right; }
         .artwork-slide { display: none; margin: 0; height: 100%; align-items: center; justify-content: center; }
         .artwork-slide.is-active { display: flex; }
         .artwork-slide-link { display: flex; height: 100%; width: 100%; align-items: center; justify-content: center; }
@@ -94,13 +105,13 @@
             }
             /* Keep 14px of black space at each slideshow edge on tablet/phone. */
             .artwork-slide-link { width: calc(100% - 28px); }
-            .slideshow-title { top: calc(1.25rem - 6px); }
+            .slideshow-heading { top: calc(1.25rem - 6px); }
         }
         @media (max-width: 768px) {
             .artwork-slideshow { height: clamp(436px, calc(60vh + 76px), 636px); }
             .artwork-slide { height: 100%; transform: none; }
             .artwork-slide img { max-height: 100%; }
-            .slideshow-title { left: 1rem; font-size: clamp(1.333rem, 8vw, 2.333rem); }
+            .slideshow-heading { left: 1rem; right: 1rem; }
             .slideshow-control { min-width: 44px; min-height: 44px; padding: .5rem .75rem; }
         }
         /* Narrow phones can report a wider CSS viewport in device emulation. */
@@ -108,7 +119,9 @@
             .artwork-slideshow { height: auto; padding-top: 66px; }
             .artwork-slide,
             .artwork-slide-link { height: auto; }
-            .slideshow-title { font-size: 24pt; }
+            .slideshow-heading { top: calc(.75rem - 6px); }
+            .slideshow-title { font-size: 1.125rem; }
+            .slideshow-category { font-size: 1rem; }
             .artwork-slide-link { align-items: flex-start; }
             .artwork-slide img {
                 display: block;
@@ -123,12 +136,14 @@
     {{ block.super }}
     (function () {
         var slides = Array.prototype.slice.call(document.querySelectorAll('.artwork-slide'));
+        var category = document.querySelector('.slideshow-category');
         if (slides.length < 2) return;
         var index = 0;
         function show(nextIndex) {
             slides[index].classList.remove('is-active');
             index = (nextIndex + slides.length) % slides.length;
             slides[index].classList.add('is-active');
+            category.textContent = slides[index].dataset.category;
         }
         document.querySelector('.slideshow-control.previous').addEventListener('click', function () { show(index - 1); });
         document.querySelector('.slideshow-control.next').addEventListener('click', function () { show(index + 1); });
