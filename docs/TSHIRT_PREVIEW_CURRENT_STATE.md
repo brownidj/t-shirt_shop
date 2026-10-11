@@ -13,6 +13,53 @@ can continue without reconstructing the earlier discussion.
 The application is a Django project using Django Oscar for the
 shop/catalogue.
 
+## Latest session update --- 10 October 2026
+
+This session covered local tooling and development-server messages. No
+T-shirt renderer changes or new rendering verification were performed;
+the colour-dependent rendering problem below remains pending.
+
+### Local development-server broken-pipe messages
+
+The reported output was:
+
+```text
+[WebServer] [10/Oct/2026 00:34:12,999] - Broken pipe from ('127.0.0.1', 52704)
+[WebServer] [10/Oct/2026 00:34:13,000] - Broken pipe from ('127.0.0.1', 52716)
+```
+
+These messages indicate that a local client disconnected before the server
+finished sending its response. A browser reload, cancelled request, test,
+or health check can cause this; the exact client was not established.
+Occasional messages do not require a fix if pages load normally. If pages
+fail or hang, inspect the preceding request/error logs before diagnosing
+the cause. These lines alone do not establish a Spaceship deployment failure.
+
+### ChatGPT/Codex model-selection issue
+
+The macOS ChatGPT app reported:
+
+```text
+The 'gpt-5.6' model is not supported when using Codex with a ChatGPT account.
+```
+
+During the earlier configuration inspection, `/Users/david/.codex/config.toml`
+selected `model = "gpt-5.6"`. No configuration edit was made in this session.
+Choose a model available to the signed-in account, or remove that explicit
+model setting to use the client's recommended default.
+
+The supplied screenshot showed a `Custom Medium` control at the bottom-right
+of the composer. Its popover displayed `Medium`, `Custom >`, and an effort
+slider. Clicking `Custom >` was suggested as the next step; the resulting
+menu and a successful model switch have not been confirmed. The slider
+controls reasoning effort.
+
+### Deployment reference
+
+Use [`SPACESHIP_GIT_DEPLOYMENT.md`](SPACESHIP_GIT_DEPLOYMENT.md) for the
+code-only Git release procedure and production-data preservation rules.
+No production deployment was performed in this session.
+
 ## Current objective
 
 Parent catalogue products represent designs. Child products represent
