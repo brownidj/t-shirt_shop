@@ -72,15 +72,22 @@
         }
         .variant-panel-preview img { display: block; }
         .variant-panel-purchase-row {
+            position: absolute;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            z-index: 1;
             display: flex;
-            flex-wrap: wrap;
             align-items: center;
-            gap: .75rem;
-            margin-top: .75rem;
+            justify-content: space-between;
+            padding: .5rem;
         }
         #variant-price {
             margin: 0;
-            font-size: 1.25rem;
+            padding: .35rem .55rem;
+            background: #000000;
+            color: #ffffff;
+            font-size: 1rem;
             font-weight: 600;
             line-height: 1.2;
             white-space: nowrap;
@@ -239,12 +246,10 @@
                     <div class="card-body">
                         <div class="variant-panel-preview">
                             <img id="variant-panel-image" class="img-fluid" alt="">
-                        </div>
-                        <div class="variant-panel-purchase-row">
-                            <p id="variant-price" aria-live="polite"></p>
                             <button id="add-to-cart" form="tshirt-add-form" type="submit" class="btn btn-primary" disabled>
                                 {% trans "Add to cart" %}
                             </button>
+                            <p id="variant-price" aria-live="polite"></p>
                         </div>
                     </div>
                 </div>
