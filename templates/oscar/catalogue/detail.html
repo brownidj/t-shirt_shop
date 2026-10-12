@@ -118,10 +118,15 @@
             visibility: visible;
             opacity: 1;
         }
-        .tshirt-style-heading { display: flex; align-items: center; gap: .5rem; white-space: nowrap; }
         .tshirt-style-heading h2, .tshirt-style-heading h3 { margin-bottom: .5rem; }
-        .design-description-tooltip { position: relative; margin: 0 0 .5rem auto; }
-        .design-description-tooltip__trigger {
+        .tshirt-style-options-row { display: flex; align-items: flex-start; gap: .5rem; }
+        #style-options { flex: 1 1 auto; }
+        .style-information {
+            position: relative;
+            flex: 0 0 auto;
+            margin: 0 0 .5rem auto;
+        }
+        .style-information__trigger {
             display: grid;
             width: 1.5rem;
             height: 1.5rem;
@@ -131,11 +136,11 @@
             border-radius: 50%;
             background: transparent;
             color: #0d6efd;
-            cursor: help;
+            cursor: pointer;
             font-size: 1.4rem;
             line-height: 1;
         }
-        .design-description-tooltip__content {
+        .style-information__content {
             position: absolute;
             z-index: 20;
             top: calc(100% + .4rem);
@@ -151,14 +156,29 @@
             text-align: left;
             white-space: normal;
             overflow-wrap: anywhere;
-            visibility: hidden;
-            opacity: 0;
-            transition: opacity .15s ease-in-out;
+            display: none;
         }
-        .design-description-tooltip:hover .design-description-tooltip__content,
-        .design-description-tooltip:focus-within .design-description-tooltip__content {
-            visibility: visible;
-            opacity: 1;
+        .style-information.is-open .style-information__content { display: block; }
+        .style-information__content h3 {
+            margin: 0 0 .35rem;
+            font-size: 1rem;
+        }
+        .style-information__content p { margin: 0 0 .45rem; }
+        .style-information__sizes {
+            width: 100%;
+            margin: .25rem 0 0;
+            color: inherit;
+            font-size: .8rem;
+        }
+        .style-information__sizes th,
+        .style-information__sizes td {
+            padding: .1rem .2rem;
+            border: 0;
+            color: inherit;
+        }
+        .style-information__sizes th { font-weight: 700; }
+        @media (max-width: 399.98px) {
+            .style-information__content { right: -1.5rem; }
         }
 
         #style-options .style-option:hover:not(.active) {
@@ -340,20 +360,20 @@
                     <div class="mb-3">
                         <div class="tshirt-style-heading mt-2">
                             <h2 class="h4">{% trans "Choose your style, colour and size" %}</h2>
-                            {% if product.description %}
-                                <span class="design-description-tooltip">
-                                    <button type="button" class="design-description-tooltip__trigger"
-                                            aria-label="{% blocktrans with product_title=product.get_title %}Read the full description for {{ product_title }}{% endblocktrans %}">
-                                        <i class="fas fa-info-circle" aria-hidden="true"></i>
-                                    </button>
-                                    <span class="design-description-tooltip__content" role="tooltip">
-                                        {{ product.description|striptags }}
-                                    </span>
-                                </span>
-                            {% endif %}
                         </div>
-                        <div id="style-options" class="d-flex flex-wrap gap-2">
-                            {# Style buttons will be populated by JS #}
+                        <div class="tshirt-style-options-row">
+                            <div id="style-options" class="d-flex flex-wrap gap-2">
+                                {# Style buttons will be populated by JS #}
+                            </div>
+                            <div id="style-information" class="style-information">
+                                <button id="style-information-trigger" type="button" class="style-information__trigger"
+                                        aria-expanded="false" aria-controls="style-information-content"
+                                        aria-label="{% trans 'View selected garment details and size guide' %}">
+                                    <i class="fas fa-info-circle" aria-hidden="true"></i>
+                                </button>
+                                <div id="style-information-content" class="style-information__content" role="dialog"
+                                     aria-label="{% trans 'Selected garment details and size guide' %}"></div>
+                            </div>
                         </div>
                     </div>
 
@@ -403,6 +423,8 @@
                                 variants = configuration.variants || [];
                                 var stylePrices = configuration.style_prices || {};
                                 configuration.style_sizes = {
+                                    "AS-5001": ["XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL", "5XL"],
+                                    "AS-4001": ["XS", "S", "M", "L", "XL", "2XL", "3XL"],
                                     "AS-3005": ["2", "4", "6"]
                                 };
                             } catch (e) {
@@ -423,9 +445,88 @@
                             var selectedSizeInput = document.getElementById("selected-size");
                             var selectedBasketLineInput = document.getElementById("selected-basket-line");
                             var addToCartForm = document.getElementById("tshirt-add-form");
+                            var styleInformation = document.getElementById("style-information");
+                            var styleInformationTrigger = document.getElementById("style-information-trigger");
+                            var styleInformationContent = document.getElementById("style-information-content");
 
                             var panel       = document.getElementById("variant-panel");
                             var panelImg    = document.getElementById("variant-panel-image");
+
+                            var styleInformationByCode = {
+                                "AS-5001": {
+                                    name: "AS Colour Men's Staple Tee",
+                                    reference: "AS-5001",
+                                    details: "Regular fit, crew neck, mid-weight 180 GSM, 28 singles. 100% combed cotton; marles contain 15% polyester. Side seamed with neck ribbing, shoulder-to-shoulder tape and double-needle hems.",
+                                    sizes: [["XS", "43", "68"], ["S", "47", "71"], ["M", "52", "75"], ["L", "56.5", "78.5"], ["XL", "61", "82"], ["2XL", "64", "83.5"], ["3XL", "68", "85"], ["4XL", "75", "87"], ["5XL", "80", "89"]]
+                                },
+                                "AS-4001": {
+                                    name: "AS Colour Women's Maple Tee",
+                                    reference: "AS-4001",
+                                    details: "Regular fit, crew neck, mid-weight 180 GSM, 28 singles. 100% combed cotton; marles contain 15% polyester. Side seamed with neck ribbing, shoulder-to-shoulder tape and double-needle hems.",
+                                    sizes: [["XS", "45.5", "63.5"], ["S", "48", "64.5"], ["M", "50.5", "65.5"], ["L", "53", "66.5"], ["XL", "55.5", "67.5"], ["2XL", "58", "68.5"], ["3XL", "60.5", "69.5"]]
+                                },
+                                "AS-3005": {
+                                    name: "AS Colour Kids Staple Tee",
+                                    reference: "AS-3005",
+                                    details: "Regular fit, crew neck, mid-weight 180 GSM, 28 singles. 100% combed cotton; marles contain 15% viscose. Side seamed with neck ribbing, shoulder-to-shoulder tape and double-needle hems.",
+                                    sizes: [["2", "31", "42"], ["4", "34", "46"], ["6", "37", "50"]]
+                                }
+                            };
+
+                            function renderStyleInformation() {
+                                if (!styleInformationContent) return;
+                                var info = styleInformationByCode[selectedStyle];
+                                styleInformationContent.replaceChildren();
+                                if (!info) return;
+
+                                var heading = document.createElement("h3");
+                                heading.textContent = info.name + " (" + info.reference + ")";
+                                var details = document.createElement("p");
+                                details.textContent = info.details;
+                                var guide = document.createElement("p");
+                                guide.textContent = "Size guide in cm (width × length)";
+                                var table = document.createElement("table");
+                                table.className = "style-information__sizes";
+                                var header = document.createElement("tr");
+                                ["Size", "Width", "Length"].forEach(function (label) {
+                                    var cell = document.createElement("th");
+                                    cell.scope = "col";
+                                    cell.textContent = label;
+                                    header.appendChild(cell);
+                                });
+                                table.appendChild(header);
+                                info.sizes.forEach(function (size) {
+                                    var row = document.createElement("tr");
+                                    size.forEach(function (value) {
+                                        var cell = document.createElement("td");
+                                        cell.textContent = value;
+                                        row.appendChild(cell);
+                                    });
+                                    table.appendChild(row);
+                                });
+                                styleInformationContent.append(heading, details, guide, table);
+                            }
+
+                            function closeStyleInformation() {
+                                if (!styleInformation || !styleInformationTrigger) return;
+                                styleInformation.classList.remove("is-open");
+                                styleInformationTrigger.setAttribute("aria-expanded", "false");
+                            }
+
+                            if (styleInformationTrigger) {
+                                styleInformationTrigger.addEventListener("click", function () {
+                                    var isOpen = styleInformation.classList.toggle("is-open");
+                                    styleInformationTrigger.setAttribute("aria-expanded", String(isOpen));
+                                });
+                                document.addEventListener("click", function (event) {
+                                    if (styleInformation && !styleInformation.contains(event.target)) {
+                                        closeStyleInformation();
+                                    }
+                                });
+                                document.addEventListener("keydown", function (event) {
+                                    if (event.key === "Escape") closeStyleInformation();
+                                });
+                            }
 
                             function updateVariantPanel(v) {
                                 if (!panel || !panelImg) {
@@ -606,6 +707,7 @@
                                 renderStyles();
                                 renderColours();
                                 renderSizes();
+                                renderStyleInformation();
                                 updateStatusAndPanel();
                                 updateCartAutomatically();
                             }
@@ -819,6 +921,7 @@
                                 renderStyles();
                                 renderColours();
                                 renderSizes();
+                                renderStyleInformation();
                                 updateStatusAndPanel();
                                 if (selectionParameters.get("auto_update") === "1") {
                                     updateCartAutomatically();

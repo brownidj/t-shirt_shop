@@ -367,7 +367,10 @@ KIDS_STAPLE_TEE_COLOURS = frozenset(
 )
 
 KIDS_STAPLE_TEE_SIZES = frozenset({"2", "4", "6"})
-ADULT_TEE_SIZES = frozenset({"XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL"})
+MENS_STAPLE_TEE_SIZES = frozenset(
+    {"XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL", "5XL"}
+)
+WOMENS_MAPLE_TEE_SIZES = frozenset({"XS", "S", "M", "L", "XL", "2XL", "3XL"})
 
 # These are retail prices for a printed garment, independent of colour or
 # size.  Fulfilment is print-on-demand, so variants are made only after a
@@ -867,9 +870,11 @@ def add_configured_tshirt(request, product_id, *, save_to_wishlist=False):
     if style_code == "AS-4001" and colour not in WOMENS_MAPLE_TEE_COLOURS:
         raise Http404("That colour is not available for the Women's Staple Tee")
 
-    valid_sizes = (
-        KIDS_STAPLE_TEE_SIZES if style_code == "AS-3005" else ADULT_TEE_SIZES
-    )
+    valid_sizes = {
+        "AS-5001": MENS_STAPLE_TEE_SIZES,
+        "AS-4001": WOMENS_MAPLE_TEE_SIZES,
+        "AS-3005": KIDS_STAPLE_TEE_SIZES,
+    }[style_code]
     if size not in valid_sizes:
         raise Http404("Unknown size")
 
