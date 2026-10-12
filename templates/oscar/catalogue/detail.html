@@ -21,11 +21,50 @@
                 <span class="breadcrumb-path__separator" aria-hidden="true">/</span>
                 <span aria-current="page">{{ product.get_title }}</span>
             </li>
+            {% if product.product_class.name == "Designs" and product.description %}
+                <li id="product-description-information" class="product-description-information">
+                    <button id="product-description-information-trigger" type="button"
+                            class="product-description-information__trigger" aria-expanded="false"
+                            aria-controls="product-description-information-content"
+                            aria-label="{% blocktrans with product_title=product.get_title %}Read the description for {{ product_title }}{% endblocktrans %}">
+                        <i class="fas fa-info-circle" aria-hidden="true"></i>
+                    </button>
+                    <div id="product-description-information-content" class="product-description-information__content"
+                         role="dialog" aria-label="{% trans 'Product description' %}">
+                        {{ product.description|striptags }}
+                    </div>
+                </li>
+            {% endif %}
             {% if product.product_class.name == "Designs" %}
-                <li id="variant-status" class="ml-auto d-flex align-items-center text-muted" aria-live="polite"></li>
+                <li id="variant-status" class="d-flex align-items-center text-muted" aria-live="polite"></li>
             {% endif %}
         </ol>
     </nav>
+    {% if product.product_class.name == "Designs" and product.description %}
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                var information = document.getElementById("product-description-information");
+                var trigger = document.getElementById("product-description-information-trigger");
+                if (!information || !trigger) return;
+
+                function closeInformation() {
+                    information.classList.remove("is-open");
+                    trigger.setAttribute("aria-expanded", "false");
+                }
+
+                trigger.addEventListener("click", function () {
+                    var isOpen = information.classList.toggle("is-open");
+                    trigger.setAttribute("aria-expanded", String(isOpen));
+                });
+                document.addEventListener("click", function (event) {
+                    if (!information.contains(event.target)) closeInformation();
+                });
+                document.addEventListener("keydown", function (event) {
+                    if (event.key === "Escape") closeInformation();
+                });
+            });
+        </script>
+    {% endif %}
 {% endblock breadcrumbs %}
 
 {% block extrastyles %}
@@ -47,6 +86,43 @@
         .breadcrumb-path__separator { padding: 0 .5rem; color: #6c757d; }
         #variant-status { margin: 0 6px; font-size: 1rem; line-height: 1; text-align: right; white-space: nowrap; }
         #variant-status::before { display: none; }
+        .product-description-information {
+            position: relative;
+            margin-left: auto;
+        }
+        .product-description-information::before { display: none; }
+        .product-description-information__trigger {
+            display: grid;
+            width: 1.5rem;
+            height: 1.5rem;
+            place-items: center;
+            padding: 0;
+            border: 0;
+            border-radius: 50%;
+            background: transparent;
+            color: #0d6efd;
+            cursor: pointer;
+            font-size: 1.4rem;
+            line-height: 1;
+        }
+        .product-description-information__content {
+            position: absolute;
+            z-index: 20;
+            top: calc(100% + .4rem);
+            right: 0;
+            width: min(22rem, calc(100vw - 2rem));
+            padding: .65rem .75rem;
+            border-radius: .25rem;
+            background: #343a40;
+            color: #ffffff;
+            font-size: .875rem;
+            line-height: 1.35;
+            text-align: left;
+            white-space: normal;
+            overflow-wrap: anywhere;
+            display: none;
+        }
+        .product-description-information.is-open .product-description-information__content { display: block; }
 
         @media (max-width: 639.98px) {
             .product-breadcrumb { flex-wrap: wrap; }
@@ -58,10 +134,7 @@
                 white-space: nowrap;
             }
             .product-breadcrumb #variant-status {
-                flex: 0 0 100%;
-                max-width: 100%;
-                margin: .35rem 0 0 !important;
-                text-align: left;
+                margin: 0 0 0 .5rem;
             }
         }
         .variant-panel-preview {
