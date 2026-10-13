@@ -67,26 +67,32 @@ test("signed-in wishlist can be inspected without changing it", async ({ page },
 test("design description is available from the T-shirt preview", async ({ page }) => {
   await visitDescribedDesign(page);
   const panel = page.locator("#variant-panel");
-  const cardBody = panel.locator(".card-body");
+  const preview = panel.locator(".variant-panel-preview");
+  const previewImage = panel.locator("#variant-panel-image");
   const trigger = panel.locator("#product-description-information-trigger");
   const content = panel.locator("#product-description-information-content");
 
   await expect(panel).toBeVisible();
+  await expect.poll(async () => previewImage.evaluate((image) => image.getBoundingClientRect().width)).toBeGreaterThan(100);
   await expect(trigger).toBeVisible();
-  const [cardBodyBox, triggerBox] = await Promise.all([cardBody.boundingBox(), trigger.boundingBox()]);
-  expect(cardBodyBox).not.toBeNull();
+  const [previewBox, triggerBox] = await Promise.all([preview.boundingBox(), trigger.boundingBox()]);
+  expect(previewBox).not.toBeNull();
   expect(triggerBox).not.toBeNull();
-  expect(triggerBox.x).toBeGreaterThan(cardBodyBox.x + cardBodyBox.width * 0.7);
-  expect(triggerBox.y).toBeGreaterThanOrEqual(cardBodyBox.y);
-  expect(triggerBox.y + triggerBox.height).toBeLessThanOrEqual(cardBodyBox.y + cardBodyBox.height);
+  expect(triggerBox.x).toBeGreaterThan(previewBox.x + previewBox.width * 0.7);
+  expect(triggerBox.y).toBeGreaterThanOrEqual(previewBox.y);
+  expect(triggerBox.y + triggerBox.height).toBeLessThanOrEqual(previewBox.y + previewBox.height);
   await expect(content).toBeHidden();
   await trigger.click();
   await expect(content).toBeVisible();
   await expect(content).toContainText("Jiangchuan cambroernids");
   const [contentBox, viewport] = await Promise.all([content.boundingBox(), page.viewportSize()]);
   expect(contentBox).not.toBeNull();
-  expect(contentBox.width).toBeLessThanOrEqual(Math.min(320, viewport.width - 16) + 1);
+  expect(contentBox.width).toBeLessThanOrEqual(Math.min(288, viewport.width - 16) + 1);
   expect(contentBox.height).toBeGreaterThanOrEqual(192);
+  await expect.poll(async () => {
+    const box = await content.boundingBox();
+    return box && box.x >= 0 && box.x + box.width <= viewport.width + 1;
+  }).toBeTruthy();
   await page.keyboard.press("Escape");
   await expect(content).toBeHidden();
   await expectNoHorizontalOverflow(page);

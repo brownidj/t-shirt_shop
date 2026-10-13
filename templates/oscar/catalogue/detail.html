@@ -49,9 +49,9 @@
         #variant-status::before { display: none; }
         #variant-panel { position: relative; overflow: visible; }
         #variant-panel .card-body { position: relative; overflow: visible; }
-        #variant-panel .product-description-information {
+        #variant-panel .variant-panel-preview .product-description-information {
             position: absolute;
-            z-index: 2;
+            z-index: 3;
             top: .75rem;
             right: .75rem;
         }
@@ -76,7 +76,7 @@
             top: calc(100% + .4rem);
             right: 0;
             box-sizing: border-box;
-            width: min(20rem, calc(100vw - 2rem));
+            width: min(18rem, calc(100vw - 2rem));
             max-width: calc(100vw - 2rem);
             min-height: 12rem;
             padding: .65rem .75rem;
@@ -93,7 +93,7 @@
         .product-description-information.is-open .product-description-information__content { display: block; }
         @media (max-width: 575.98px) {
             .product-description-information__content {
-                width: min(20rem, calc(100vw - 1rem));
+                width: min(18rem, calc(100vw - 1rem));
                 max-width: calc(100vw - 1rem);
             }
         }
@@ -357,21 +357,21 @@
             {% if product.product_class.name == "Designs" %}
                 <div id="variant-panel" class="card mt-3 d-none">
                     <div class="card-body">
-                        {% if product.description %}
-                            <div id="product-description-information" class="product-description-information">
-                                <button id="product-description-information-trigger" type="button"
-                                        class="product-description-information__trigger" aria-expanded="false"
-                                        aria-controls="product-description-information-content"
-                                        aria-label="{% blocktrans with product_title=product.get_title %}Read the description for {{ product_title }}{% endblocktrans %}">
-                                    <i class="fas fa-info-circle" aria-hidden="true"></i>
-                                </button>
-                                <div id="product-description-information-content" class="product-description-information__content"
-                                     role="dialog" aria-label="{% trans 'Product description' %}">
-                                    {{ product.description|striptags }}
-                                </div>
-                            </div>
-                        {% endif %}
                         <div class="variant-panel-preview">
+                            {% if product.description %}
+                                <div id="product-description-information" class="product-description-information">
+                                    <button id="product-description-information-trigger" type="button"
+                                            class="product-description-information__trigger" aria-expanded="false"
+                                            aria-controls="product-description-information-content"
+                                            aria-label="{% blocktrans with product_title=product.get_title %}Read the description for {{ product_title }}{% endblocktrans %}">
+                                        <i class="fas fa-info-circle" aria-hidden="true"></i>
+                                    </button>
+                                    <div id="product-description-information-content" class="product-description-information__content"
+                                         role="dialog" aria-label="{% trans 'Product description' %}">
+                                        {{ product.description|striptags }}
+                                    </div>
+                                </div>
+                            {% endif %}
                             <img id="variant-panel-image" class="img-fluid" alt="">
                             <div class="variant-panel-purchase-row">
                                 <button id="add-to-cart" form="tshirt-add-form" type="submit" class="btn btn-primary" disabled>
@@ -514,6 +514,7 @@
                             var styleInformationContent = document.getElementById("style-information-content");
                             var productDescriptionInformation = document.getElementById("product-description-information");
                             var productDescriptionInformationTrigger = document.getElementById("product-description-information-trigger");
+                            var productDescriptionInformationContent = document.getElementById("product-description-information-content");
 
                             var panel       = document.getElementById("variant-panel");
                             var panelImg    = document.getElementById("variant-panel-image");
@@ -600,10 +601,32 @@
                                 productDescriptionInformationTrigger.setAttribute("aria-expanded", "false");
                             }
 
+                            function positionProductDescriptionInformation() {
+                                if (!productDescriptionInformationContent) return;
+
+                                productDescriptionInformationContent.style.transform = "";
+                                var bounds = productDescriptionInformationContent.getBoundingClientRect();
+                                var viewportPadding = 8;
+                                var offset = 0;
+
+                                if (bounds.left < viewportPadding) {
+                                    offset = viewportPadding - bounds.left;
+                                } else if (bounds.right > window.innerWidth - viewportPadding) {
+                                    offset = window.innerWidth - viewportPadding - bounds.right;
+                                }
+
+                                if (offset) {
+                                    productDescriptionInformationContent.style.transform = "translateX(" + offset + "px)";
+                                }
+                            }
+
                             if (productDescriptionInformationTrigger) {
                                 productDescriptionInformationTrigger.addEventListener("click", function () {
                                     var isOpen = productDescriptionInformation.classList.toggle("is-open");
                                     productDescriptionInformationTrigger.setAttribute("aria-expanded", String(isOpen));
+                                    if (isOpen) {
+                                        window.requestAnimationFrame(positionProductDescriptionInformation);
+                                    }
                                 });
                                 document.addEventListener("click", function (event) {
                                     if (productDescriptionInformation && !productDescriptionInformation.contains(event.target)) {
@@ -612,6 +635,11 @@
                                 });
                                 document.addEventListener("keydown", function (event) {
                                     if (event.key === "Escape") closeProductDescriptionInformation();
+                                });
+                                window.addEventListener("resize", function () {
+                                    if (productDescriptionInformation.classList.contains("is-open")) {
+                                        positionProductDescriptionInformation();
+                                    }
                                 });
                             }
 
