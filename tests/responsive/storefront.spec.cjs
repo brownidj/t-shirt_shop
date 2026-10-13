@@ -63,6 +63,12 @@ test("design description is available from the T-shirt preview", async ({ page }
 
   await expect(panel).toBeVisible();
   await expect(trigger).toBeVisible();
+  const [panelBox, triggerBox] = await Promise.all([panel.boundingBox(), trigger.boundingBox()]);
+  expect(panelBox).not.toBeNull();
+  expect(triggerBox).not.toBeNull();
+  expect(triggerBox.x).toBeGreaterThan(panelBox.x + panelBox.width * 0.7);
+  expect(triggerBox.y).toBeGreaterThanOrEqual(panelBox.y);
+  expect(triggerBox.y + triggerBox.height).toBeLessThanOrEqual(panelBox.y + panelBox.height);
   await expect(content).toBeHidden();
   await trigger.click();
   await expect(content).toBeVisible();
