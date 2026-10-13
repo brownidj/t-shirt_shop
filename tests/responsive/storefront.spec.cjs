@@ -64,7 +64,7 @@ test("signed-in wishlist can be inspected without changing it", async ({ page },
   await page.screenshot({ path: testInfo.outputPath("wishlist.png"), fullPage: true });
 });
 
-test("legal footer links stay separated on every viewport", async ({ page }) => {
+test("legal footer links stay on one separated row on every viewport", async ({ page }) => {
   await page.goto("/accounts/login/", { waitUntil: "domcontentloaded" });
   const links = page.locator('nav[aria-label="Legal information"] a');
   await expect(links).toHaveCount(3);
@@ -78,9 +78,9 @@ test("legal footer links stay separated on every viewport", async ({ page }) => 
   for (let index = 1; index < boxes.length; index += 1) {
     const previous = boxes[index - 1];
     const current = boxes[index];
-    const isOnNewLine = current.top >= previous.bottom + 1;
     const hasHorizontalGap = current.left >= previous.right + 8;
-    expect(isOnNewLine || hasHorizontalGap).toBeTruthy();
+    expect(Math.abs(current.top - previous.top)).toBeLessThanOrEqual(1);
+    expect(hasHorizontalGap).toBeTruthy();
   }
   await expectNoHorizontalOverflow(page);
 });
