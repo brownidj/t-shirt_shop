@@ -34,6 +34,11 @@ class FulfilmentSupplier(models.Model):
     supports_blind_shipping = models.BooleanField(default=False)
     active = models.BooleanField(default=True)
     proof_required = models.BooleanField(default=True)
+    address = models.TextField(blank=True)
+    sales_email = models.EmailField(blank=True)
+    support_email = models.EmailField(blank=True)
+    phone_number = models.CharField(max_length=32, blank=True)
+    opening_hours = models.CharField(max_length=200, blank=True)
 
     class Meta:
         ordering = ("name",)
