@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.contrib.flatpages.views import flatpage
 from django.apps import apps
 from django.contrib.auth.decorators import login_required
 from django.urls import path, include, re_path
@@ -63,12 +64,18 @@ urlpatterns = [
         views.add_configured_tshirt_to_wishlist,
         name="configured_tshirt_wishlist_add",
     ),
+    path("terms-of-sale/", flatpage, {"url": "/terms-of-sale/"}),
+    path(
+        "returns-refunds-cancellations/",
+        flatpage,
+        {"url": "/returns-refunds-cancellations/"},
+    ),
+    path("privacy-policy/", flatpage, {"url": "/privacy-policy/"}),
     re_path(
         r"^catalogue/(?P<product_slug>[\w-]*)_(?P<pk>\d+)/$",
         views.configured_product_detail,
         name="configured_product_detail",
     ),
-
     path("", include(oscar_app.urls[0])),
 ]
 

@@ -1,0 +1,38 @@
+[
+  {
+    "title": "Cambroernid 01",
+    "upc": "P_CAM_01",
+    "file": "Cambroernid_01_catalogue.jpg",
+    "relative": "images/products/2026/10/Cambroernid_01_e962fa1d5cf5.jpg",
+    "sha256": "e962fa1d5cf5375f2fb29d25e1321b4d57dc52dfe696f619d1a85004a0f12102",
+    "size": [
+      1200,
+      690
+    ],
+    "bytes": 139654,
+    "crop": [
+      0,
+      0,
+      1654,
+      951
+    ]
+  },
+  {
+    "title": "Coelacanths / lungfish",
+    "upc": "P_CPR_S",
+    "file": "Coelacanth_lungfish_catalogue.jpg",
+    "relative": "images/products/2026/10/Coelacanth_lungfish_e1470d7dd84f.jpg",
+    "sha256": "e1470d7dd84f5b0c67f94b2c66e2c5ef80a213a3a5b9d73ca462a3cf660b228c",
+    "size": [
+      1200,
+      800
+    ],
+    "bytes": 111636,
+    "crop": [
+      0,
+      0,
+      1654,
+      1103
+    ]
+  }
+]

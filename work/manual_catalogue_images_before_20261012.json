@@ -1,0 +1,25 @@
+[
+  {
+    "id": 5253,
+    "title": "Cambroernid 01",
+    "upc": "P_CAM_01",
+    "description": "<p>Reconstructed cambroernids from Jiangchuan, Yunnan, China, lived around 554-539 million years ago. Interpreted as early ambulacrarians, they belong near the lineage containing starfish and acorn worms. Their stalked bodies and feeding tentacles evoke our distant evolutionary kinship, paired here with the joke 'we've lost touch'.</p>",
+    "categories": [
+      "Paleontology"
+    ],
+    "image_id": 26,
+    "original": "images/products/2026/10/Cambroernid_01_22pt_20261012.jpg"
+  },
+  {
+    "id": 20,
+    "title": "Coelacanths / lungfish",
+    "upc": "P_CPR_S",
+    "description": "<p>Ines</p>",
+    "categories": [
+      "Paleontology",
+      "Scuba"
+    ],
+    "image_id": 6,
+    "original": "images/products/2025/12/coelocanth.png"
+  }
+]

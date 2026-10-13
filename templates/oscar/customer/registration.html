@@ -1,0 +1,10 @@
+{% extends "oscar/customer/registration.html" %}
+{% load i18n %}
+
+{% block content %}
+    {{ block.super }}
+    <p class="small text-muted mt-3">
+        Your account details are handled in accordance with our
+        <a href="/privacy-policy/">Privacy Policy</a>.
+    </p>
+{% endblock content %}

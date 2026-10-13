@@ -260,6 +260,12 @@ def stripe_checkout(request):
     """Start a hosted Stripe Checkout session from server-side basket prices."""
     if request.basket.is_empty:
         return redirect("basket:summary")
+    if request.POST.get("accept_policies") != "yes":
+        messages.error(
+            request,
+            "Please accept the Terms of Sale, Returns Policy and Privacy Policy before checkout.",
+        )
+        return redirect("basket:summary")
     try:
         stripe = _stripe()
     except RuntimeError:
@@ -280,6 +286,7 @@ def stripe_checkout(request):
         "metadata": {
             "basket_id": str(request.basket.id),
             "user_id": str(request.user.id) if request.user.is_authenticated else "",
+            "policy_version": "2026-10-13",
         },
         "client_reference_id": str(request.basket.id),
         "success_url": request.build_absolute_uri(reverse("stripe_checkout_success")) + "?session_id={CHECKOUT_SESSION_ID}",
@@ -423,7 +430,7 @@ WOMENS_MAPLE_TEE_COLOURS = frozenset(
 
 
 def slideshow_home(request):
-    """Show catalogue artwork, linked to its corresponding product page."""
+    """Show catalogue artwork in each of its assigned category sections."""
     category_order = {
         "Paleontology": 0,
         "Scuba": 1,
@@ -431,52 +438,34 @@ def slideshow_home(request):
         "Astrophysics": 3,
     }
 
-    def slideshow_sort_key(product_image):
-        """Put requested catalogue categories first, then order designs by title."""
-        product_categories = product_image.product.categories.all()
-        category_position = min(
-            (
-                category_order.get(category.name, len(category_order))
-                for category in product_categories
-            ),
-            default=len(category_order),
-        )
-        return (
-            category_position,
-            product_image.product.title.casefold(),
-            product_image.original.name.casefold(),
-        )
-
-    def slideshow_category(product_image):
-        """Return the category that determines a slide's place in the sequence."""
-        categories = sorted(
-            product_image.product.categories.all(),
-            key=lambda category: (
-                category_order.get(category.name, len(category_order)),
-                category.name.casefold(),
-            ),
-        )
-        return categories[0].name if categories else "Other designs"
-
     slides = []
     product_images = ProductImage.objects.select_related("product").prefetch_related(
         "product__categories"
     )
-    for product_image in sorted(product_images, key=slideshow_sort_key):
+    for product_image in product_images:
         if not product_image.original:
             continue
 
         image_path = Path(product_image.original.path)
-        slides.append(
-            {
-                # Cache-bust edited artwork so a slideshow refresh never shows
-                # an earlier image with stale borders or other old pixels.
-                "url": f"{product_image.original.url}?v={image_path.stat().st_mtime_ns}",
-                "alt": product_image.product.title,
-                "category": slideshow_category(product_image),
-                "product_url": product_image.product.get_absolute_url(),
-            }
+        # Cache-bust edited artwork so a slideshow refresh never shows
+        # an earlier image with stale borders or other old pixels.
+        artwork = {
+            "url": f"{product_image.original.url}?v={image_path.stat().st_mtime_ns}",
+            "alt": product_image.product.title,
+            "product_url": product_image.product.get_absolute_url(),
+        }
+        categories = [c.name for c in product_image.product.categories.all()]
+        for category in categories or ["Other designs"]:
+            slides.append({**artwork, "category": category})
+
+    slides.sort(
+        key=lambda slide: (
+            category_order.get(slide["category"], len(category_order)),
+            slide["category"].casefold(),
+            slide["alt"].casefold(),
+            slide["url"].casefold(),
         )
+    )
     return render(request, "topository/home.html", {"slides": slides})
 
 

@@ -26,6 +26,7 @@
     <div class="col-lg-8 px-0">
         <h1>{% trans "Request a t-shirt design" %}</h1>
         <p>Tell us what you would like to see on a T-shirt. We will review your idea and get in touch using the email address you provide.</p>
+        <p class="small text-muted">We use these details to respond to your request. See our <a href="/privacy-policy/">Privacy Policy</a>.</p>
         <form method="post" novalidate>
             {% csrf_token %}
             {% for field in form %}

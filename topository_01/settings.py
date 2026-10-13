@@ -139,10 +139,10 @@ CACHES = {
 }
 
 # --- Search backend for Oscar (django-haystack) ---
-# Use the simple in-memory backend for development so you don't need to run a search service.
+# Use the local Whoosh index with accurate pagination for short final pages.
 HAYSTACK_CONNECTIONS = {
     'default': {
-        'ENGINE': 'haystack.backends.whoosh_backend.WhooshEngine',
+        'ENGINE': 'topository_01.search.backends.OffsetWhooshEngine',
         'PATH': BASE_DIR / 'whoosh_index',
     },
 }

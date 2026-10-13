@@ -1,0 +1,20 @@
+{% extends "oscar/layout.html" %}
+
+{% block title %}{{ flatpage.title }} | {{ block.super }}{% endblock %}
+
+{% block breadcrumbs %}
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ homepage_url }}">Home</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ flatpage.title }}</li>
+        </ol>
+    </nav>
+{% endblock %}
+
+{% block headertext %}{{ flatpage.title }}{% endblock %}
+
+{% block content %}
+    <article class="legal-page col-lg-9 px-0">
+        {{ flatpage.content }}
+    </article>
+{% endblock %}

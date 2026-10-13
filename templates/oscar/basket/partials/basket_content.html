@@ -139,6 +139,19 @@
             <div class="col-sm-4 offset-sm-8">
                 <form action="{% url 'stripe_checkout' %}" method="post">
                     {% csrf_token %}
+                    <p class="small text-muted mb-2">
+                        Made to order — production normally takes about 10 business days.
+                        Changes or cancellation may not be possible once production begins.
+                    </p>
+                    <div class="form-check small mb-3">
+                        <input class="form-check-input" type="checkbox" name="accept_policies"
+                               value="yes" id="accept-policies" required>
+                        <label class="form-check-label" for="accept-policies">
+                            I agree to the <a href="/terms-of-sale/" target="_blank" rel="noopener">Terms of Sale</a>,
+                            <a href="/returns-refunds-cancellations/" target="_blank" rel="noopener">Returns Policy</a>
+                            and <a href="/privacy-policy/" target="_blank" rel="noopener">Privacy Policy</a>.
+                        </label>
+                    </div>
                     <button type="submit" class="btn btn-lg btn-primary btn-block">{% trans "Checkout" %}</button>
                 </form>
             </div>
