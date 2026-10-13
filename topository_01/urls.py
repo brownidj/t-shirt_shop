@@ -46,6 +46,11 @@ urlpatterns = [
         login_required(views.ProfileUpdateView.as_view()),
     ),
     path("admin/", admin.site.urls),
+    path(
+        "dashboard/orders/<str:number>/fulfilment/",
+        views.fulfilment_order,
+        name="fulfilment_order",
+    ),
     # Include Oscar without an outer namespace so child namespaces (e.g. 'dashboard') stay top-level
 
     # Dynamic T-shirt preview image

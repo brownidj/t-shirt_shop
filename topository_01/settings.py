@@ -126,6 +126,17 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
+# Print-ready artwork is deliberately outside MEDIA_ROOT so it cannot be
+# fetched through a public media URL.  Fulfilment email is staff-initiated and
+# attaches the relevant master directly from this directory.
+PRIVATE_DESIGN_ARTWORK_ROOT = Path(
+    os.environ.get("PRIVATE_DESIGN_ARTWORK_ROOT", BASE_DIR / "private_design_artwork")
+)
+FULFILMENT_RECIPIENT = os.environ.get("FULFILMENT_RECIPIENT", "")
+FULFILMENT_FROM_EMAIL = os.environ.get(
+    "FULFILMENT_FROM_EMAIL", "info@tshirts.topository.org"
+)
+
 # Rendered shirt previews are costly image composites.  The cache key in the
 # view includes source file timestamps, so changed artwork automatically bypasses
 # entries before this 10-day timeout.

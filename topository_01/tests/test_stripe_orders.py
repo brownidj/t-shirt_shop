@@ -159,3 +159,26 @@ class StripeCheckoutPolicyTests(TestCase):
 
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, reverse("basket:summary"))
+
+
+class FulfilmentDashboardTests(TestCase):
+    def setUp(self):
+        Country.objects.create(iso_3166_1_a2="AU", printable_name="Australia")
+        self.order = _create_order_from_stripe_session(
+            StripeOrderCreationTests.session_for(self, create_basket())
+        )
+        self.staff = get_user_model().objects.create_user(
+            username="staff", password="safe-test-password", is_staff=True
+        )
+
+    def test_fulfilment_draft_is_staff_only_and_never_shopper_facing(self):
+        url = reverse("fulfilment_order", kwargs={"number": self.order.number})
+
+        anonymous_response = self.client.get(url)
+        self.assertEqual(anonymous_response.status_code, 302)
+
+        self.client.force_login(self.staff)
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Garment Printing Group")
+        self.assertContains(response, "No Garment Printing Group recipient has been configured")

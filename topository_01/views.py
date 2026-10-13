@@ -9,7 +9,7 @@ from pathlib import Path
 from urllib.parse import urlencode
 
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.db import IntegrityError, transaction
@@ -47,6 +47,7 @@ from .forms import (
     UsernameOrEmailAuthenticationForm,
 )
 from .strategy import Selector
+from .fulfilment import build_fulfilment_email, fulfilment_lines
 
 
 logger = logging.getLogger(__name__)
@@ -56,6 +57,7 @@ Order = get_model("order", "Order")
 ShippingAddress = get_model("order", "ShippingAddress")
 UserAddress = get_model("address", "UserAddress")
 WishlistLine = get_model("wishlists", "Line")
+OrderNote = get_model("order", "OrderNote")
 
 
 def _shopper_wishlist_name(user):
@@ -361,6 +363,47 @@ def stripe_webhook(request):
             logger.exception("Could not process Stripe webhook %s", event.get("id"))
             return HttpResponse(status=500)
     return HttpResponse(status=200)
+
+
+@user_passes_test(lambda user: user.is_staff)
+def fulfilment_order(request, number):
+    """Review and send a private print fulfilment request for one order."""
+    order = get_object_or_404(
+        Order.objects.select_related("shipping_address", "shipping_address__country"),
+        number=number,
+    )
+    lines = fulfilment_lines(order)
+    missing_artwork = [line["title"] for line in lines if line["artwork"] is None]
+
+    if request.method == "POST":
+        if missing_artwork:
+            messages.error(request, "Add private print-ready artwork before sending this request.")
+        else:
+            try:
+                email = build_fulfilment_email(order)
+                email.send(fail_silently=False)
+            except Exception:
+                logger.exception("Could not send fulfilment request for order %s", order.number)
+                messages.error(request, "The fulfilment request was not sent. Check recipient and mail settings.")
+            else:
+                order.notes.create(
+                    user=request.user,
+                    message="Fulfilment request emailed to Garment Printing Group.",
+                    note_type=OrderNote.SYSTEM,
+                )
+                messages.success(request, "Fulfilment request emailed to Garment Printing Group.")
+                return redirect("fulfilment_order", number=order.number)
+
+    return render(
+        request,
+        "topository/fulfilment_order.html",
+        {
+            "order": order,
+            "lines": lines,
+            "missing_artwork": missing_artwork,
+            "recipient_configured": bool(settings.FULFILMENT_RECIPIENT.strip()),
+        },
+    )
 
 
 KIDS_STAPLE_TEE_COLOURS = frozenset(

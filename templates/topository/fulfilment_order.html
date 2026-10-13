@@ -1,0 +1,54 @@
+{% extends "oscar/dashboard/layout.html" %}
+
+{% block title %}Fulfilment request for {{ order.number }} | {{ block.super }}{% endblock %}
+
+{% block breadcrumbs %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'dashboard:index' %}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'dashboard:order-list' %}">Orders</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'dashboard:order-detail' number=order.number %}">#{{ order.number }}</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Fulfilment</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block headertext %}Fulfilment request{% endblock %}
+
+{% block dashboard_content %}
+<div class="card card-body mb-4">
+    <h2>Garment Printing Group</h2>
+    <p class="mb-1"><strong>Order:</strong> {{ order.number }}</p>
+    <p class="mb-0"><strong>Delivery:</strong> normal delivery directly to the shopper. The supplier invoice is directed to Topository only.</p>
+</div>
+
+{% if not recipient_configured %}
+    <div class="alert alert-warning">No Garment Printing Group recipient has been configured, so sending is disabled.</div>
+{% endif %}
+{% if missing_artwork %}
+    <div class="alert alert-danger">Private print-ready artwork is missing for: {{ missing_artwork|join:", " }}. Public catalogue images are never used for fulfilment.</div>
+{% endif %}
+
+<table class="table table-bordered table-striped">
+    <thead><tr><th>Design</th><th>Quantity</th><th>Garment style</th><th>Colour</th><th>Size</th><th>Print-ready artwork</th></tr></thead>
+    <tbody>
+    {% for line in lines %}
+        <tr>
+            <td>{{ line.title }}</td><td>{{ line.quantity }}</td><td>{{ line.style }}</td><td>{{ line.colour }}</td><td>{{ line.size }}</td>
+            <td>{% if line.artwork %}{{ line.artwork.name }}{% else %}<strong>Missing</strong>{% endif %}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+<div class="card card-body bg-light mb-4">
+    <h3>Shopper delivery address</h3>
+    <address class="mb-0">{{ order.shipping_address|linebreaksbr }}</address>
+</div>
+
+<form method="post">
+    {% csrf_token %}
+    <button class="btn btn-primary" type="submit" {% if not recipient_configured or missing_artwork %}disabled aria-disabled="true"{% endif %}>Email fulfilment request</button>
+    <a class="btn btn-secondary" href="{% url 'dashboard:order-detail' number=order.number %}">Back to order</a>
+</form>
+{% endblock %}

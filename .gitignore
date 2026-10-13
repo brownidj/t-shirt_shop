@@ -12,6 +12,8 @@ __pycache__/
 *.sqlite3
 *.sqlite3-journal
 media/cache/
+private_design_artwork/*
+!private_design_artwork/.gitkeep
 staticfiles/
 whoosh_index/
 tmp/
