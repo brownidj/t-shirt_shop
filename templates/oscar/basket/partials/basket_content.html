@@ -137,7 +137,7 @@
     <div class="form-group clearfix formactions">
         <div class="row">
             <div class="col-sm-4 offset-sm-8">
-                <form action="{% url 'stripe_checkout' %}" method="post">
+                <form action="{% url 'stripe_checkout' %}" method="post" id="stripe-checkout-form">
                     {% csrf_token %}
                     <p class="small text-muted mb-2">
                         Made to order — production normally takes about 10 business days.
@@ -152,8 +152,23 @@
                             and <a href="/privacy-policy/" target="_blank" rel="noopener">Privacy Policy</a>.
                         </label>
                     </div>
-                    <button type="submit" class="btn btn-lg btn-primary btn-block">{% trans "Checkout" %}</button>
+                    <button type="submit" class="btn btn-lg btn-primary btn-block" id="stripe-checkout-submit" disabled aria-disabled="true">{% trans "Checkout" %}</button>
                 </form>
+                <script>
+                    (function () {
+                        const acceptance = document.getElementById("accept-policies");
+                        const checkout = document.getElementById("stripe-checkout-submit");
+                        if (!acceptance || !checkout) return;
+
+                        function updateCheckoutAvailability() {
+                            checkout.disabled = !acceptance.checked;
+                            checkout.setAttribute("aria-disabled", String(!acceptance.checked));
+                        }
+
+                        acceptance.addEventListener("change", updateCheckoutAvailability);
+                        updateCheckoutAvailability();
+                    }());
+                </script>
             </div>
         </div>
     </div>

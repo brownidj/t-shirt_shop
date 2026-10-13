@@ -1,11 +1,18 @@
 from types import SimpleNamespace
 
+from django.contrib.messages.storage.fallback import FallbackStorage
+from django.contrib.sessions.middleware import SessionMiddleware
 from django.contrib.auth import get_user_model
-from django.test import TestCase
+from django.test import RequestFactory, TestCase
+from django.urls import reverse
 from oscar.core.loading import get_model
 from oscar.test.factories import create_basket
 
-from topository_01.views import _create_order_from_stripe_session, _stripe_customer_for_user
+from topository_01.views import (
+    _create_order_from_stripe_session,
+    _stripe_customer_for_user,
+    stripe_checkout,
+)
 
 
 Country = get_model("address", "Country")
@@ -138,3 +145,17 @@ class StripeCustomerTests(TestCase):
 
         self.assertEqual(customer_id, "cus_existing")
         self.assertEqual(updates[0][1]["shipping"]["address"]["line1"], "1 Example Street")
+
+
+class StripeCheckoutPolicyTests(TestCase):
+    def test_checkout_without_policy_acceptance_returns_to_basket(self):
+        request = RequestFactory().post(reverse("stripe_checkout"))
+        SessionMiddleware(lambda request: None).process_request(request)
+        request.session.save()
+        request.basket = create_basket()
+        request._messages = FallbackStorage(request)
+
+        response = stripe_checkout(request)
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse("basket:summary"))
