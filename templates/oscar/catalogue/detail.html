@@ -47,7 +47,8 @@
         .breadcrumb-path__separator { padding: 0 .5rem; color: #6c757d; }
         #variant-status { margin: 0 6px; font-size: 1rem; line-height: 1; text-align: right; white-space: nowrap; }
         #variant-status::before { display: none; }
-        #variant-panel { position: relative; }
+        #variant-panel { position: relative; overflow: visible; }
+        #variant-panel .card-body { position: relative; overflow: visible; }
         #variant-panel .product-description-information {
             position: absolute;
             z-index: 2;
@@ -75,8 +76,9 @@
             top: calc(100% + .4rem);
             right: 0;
             box-sizing: border-box;
-            width: min(32rem, calc(100vw - 2rem));
+            width: min(20rem, calc(100vw - 2rem));
             max-width: calc(100vw - 2rem);
+            min-height: 12rem;
             padding: .65rem .75rem;
             border-radius: .25rem;
             background: #343a40;
@@ -91,7 +93,7 @@
         .product-description-information.is-open .product-description-information__content { display: block; }
         @media (max-width: 575.98px) {
             .product-description-information__content {
-                width: min(26rem, calc(100vw - 1rem));
+                width: min(20rem, calc(100vw - 1rem));
                 max-width: calc(100vw - 1rem);
             }
         }
@@ -354,21 +356,21 @@
             {# Variant details panel lives under the design image #}
             {% if product.product_class.name == "Designs" %}
                 <div id="variant-panel" class="card mt-3 d-none">
-                    {% if product.description %}
-                        <div id="product-description-information" class="product-description-information">
-                            <button id="product-description-information-trigger" type="button"
-                                    class="product-description-information__trigger" aria-expanded="false"
-                                    aria-controls="product-description-information-content"
-                                    aria-label="{% blocktrans with product_title=product.get_title %}Read the description for {{ product_title }}{% endblocktrans %}">
-                                <i class="fas fa-info-circle" aria-hidden="true"></i>
-                            </button>
-                            <div id="product-description-information-content" class="product-description-information__content"
-                                 role="dialog" aria-label="{% trans 'Product description' %}">
-                                {{ product.description|striptags }}
-                            </div>
-                        </div>
-                    {% endif %}
                     <div class="card-body">
+                        {% if product.description %}
+                            <div id="product-description-information" class="product-description-information">
+                                <button id="product-description-information-trigger" type="button"
+                                        class="product-description-information__trigger" aria-expanded="false"
+                                        aria-controls="product-description-information-content"
+                                        aria-label="{% blocktrans with product_title=product.get_title %}Read the description for {{ product_title }}{% endblocktrans %}">
+                                    <i class="fas fa-info-circle" aria-hidden="true"></i>
+                                </button>
+                                <div id="product-description-information-content" class="product-description-information__content"
+                                     role="dialog" aria-label="{% trans 'Product description' %}">
+                                    {{ product.description|striptags }}
+                                </div>
+                            </div>
+                        {% endif %}
                         <div class="variant-panel-preview">
                             <img id="variant-panel-image" class="img-fluid" alt="">
                             <div class="variant-panel-purchase-row">
