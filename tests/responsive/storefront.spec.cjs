@@ -64,6 +64,27 @@ test("signed-in wishlist can be inspected without changing it", async ({ page },
   await page.screenshot({ path: testInfo.outputPath("wishlist.png"), fullPage: true });
 });
 
+test("legal footer links stay separated on every viewport", async ({ page }) => {
+  await page.goto("/accounts/login/", { waitUntil: "domcontentloaded" });
+  const links = page.locator('nav[aria-label="Legal information"] a');
+  await expect(links).toHaveCount(3);
+
+  const boxes = await links.evaluateAll((elements) =>
+    elements.map((element) => {
+      const box = element.getBoundingClientRect();
+      return { left: box.left, right: box.right, top: box.top, bottom: box.bottom };
+    })
+  );
+  for (let index = 1; index < boxes.length; index += 1) {
+    const previous = boxes[index - 1];
+    const current = boxes[index];
+    const isOnNewLine = current.top >= previous.bottom + 1;
+    const hasHorizontalGap = current.left >= previous.right + 8;
+    expect(isOnNewLine || hasHorizontalGap).toBeTruthy();
+  }
+  await expectNoHorizontalOverflow(page);
+});
+
 test("design description is available from the T-shirt preview", async ({ page }) => {
   await visitDescribedDesign(page);
   const panel = page.locator("#variant-panel");
