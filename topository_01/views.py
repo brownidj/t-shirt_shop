@@ -44,10 +44,16 @@ from .forms import (
     CustomerProfileForm,
     CustomerRegistrationForm,
     DesignRequestForm,
+    FulfilmentRequestForm,
     UsernameOrEmailAuthenticationForm,
 )
 from .strategy import Selector
-from .fulfilment import build_fulfilment_email, fulfilment_lines
+from .fulfilment import (
+    build_fulfilment_email,
+    ensure_fulfilment_request,
+    fulfilment_lines,
+    mark_request_sent,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -173,6 +179,7 @@ def _create_order_from_stripe_session(session):
     order_number = f"stripe-{session_id}"
     existing = Order.objects.filter(number=order_number).first()
     if existing:
+        ensure_fulfilment_request(existing)
         return existing
 
     try:
@@ -254,6 +261,7 @@ def _create_order_from_stripe_session(session):
         order = Order.objects.get(number=order_number)
     else:
         basket.submit()
+    ensure_fulfilment_request(order)
     return order
 
 
@@ -372,27 +380,45 @@ def fulfilment_order(request, number):
         Order.objects.select_related("shipping_address", "shipping_address__country"),
         number=number,
     )
+    fulfilment_request = ensure_fulfilment_request(order)
     lines = fulfilment_lines(order)
     missing_artwork = [line["title"] for line in lines if line["artwork"] is None]
 
     if request.method == "POST":
-        if missing_artwork:
-            messages.error(request, "Add private print-ready artwork before sending this request.")
-        else:
-            try:
-                email = build_fulfilment_email(order)
-                email.send(fail_silently=False)
-            except Exception:
-                logger.exception("Could not send fulfilment request for order %s", order.number)
-                messages.error(request, "The fulfilment request was not sent. Check recipient and mail settings.")
-            else:
-                order.notes.create(
-                    user=request.user,
-                    message="Fulfilment request emailed to Garment Printing Group.",
-                    note_type=OrderNote.SYSTEM,
-                )
-                messages.success(request, "Fulfilment request emailed to Garment Printing Group.")
+        form = FulfilmentRequestForm(request.POST, instance=fulfilment_request)
+        if form.is_valid():
+            fulfilment_request = form.save()
+            if request.POST.get("action") == "save":
+                messages.success(request, "Fulfilment details saved.")
                 return redirect("fulfilment_order", number=order.number)
+            if request.POST.get("action") != "send":
+                messages.error(request, "Choose whether to save or send the fulfilment request.")
+            elif missing_artwork:
+                messages.error(request, "Add private print-ready artwork before sending this request.")
+            else:
+                try:
+                    email = build_fulfilment_email(fulfilment_request)
+                    email.send(fail_silently=False)
+                except Exception:
+                    logger.exception("Could not send fulfilment request for order %s", order.number)
+                    messages.error(request, "The fulfilment request was not sent. Check supplier contact and mail settings.")
+                else:
+                    mark_request_sent(fulfilment_request)
+                    order.notes.create(
+                        user=request.user,
+                        message=(
+                            "Fulfilment request emailed to "
+                            f"{fulfilment_request.contact.name} at "
+                            f"{fulfilment_request.supplier.name}."
+                        ),
+                        note_type=OrderNote.SYSTEM,
+                    )
+                    messages.success(request, "Fulfilment request emailed to the supplier.")
+                    return redirect("fulfilment_order", number=order.number)
+        else:
+            messages.error(request, "Correct the fulfilment details before saving or sending.")
+    else:
+        form = FulfilmentRequestForm(instance=fulfilment_request)
 
     return render(
         request,
@@ -401,7 +427,8 @@ def fulfilment_order(request, number):
             "order": order,
             "lines": lines,
             "missing_artwork": missing_artwork,
-            "recipient_configured": bool(settings.FULFILMENT_RECIPIENT.strip()),
+            "fulfilment_request": fulfilment_request,
+            "form": form,
         },
     )
 

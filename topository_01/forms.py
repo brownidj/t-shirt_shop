@@ -9,7 +9,13 @@ from oscar.apps.customer.forms import (
     UserForm as OscarUserForm,
 )
 
-from .models import DesignRequest, MarketingConsent
+from .models import (
+    DesignRequest,
+    FulfilmentContact,
+    FulfilmentRequest,
+    FulfilmentSupplier,
+    MarketingConsent,
+)
 
 
 class UsernameOrEmailAuthenticationForm(OscarEmailAuthenticationForm):
@@ -114,3 +120,34 @@ class CustomerProfileForm(OscarUserForm):
     def __init__(self, user, *args, **kwargs):
         super().__init__(user, *args, **kwargs)
         self.fields["first_name"].required = True
+
+
+class FulfilmentRequestForm(forms.ModelForm):
+    """Choose a blind-shipping POD supplier and its named contact."""
+
+    class Meta:
+        model = FulfilmentRequest
+        fields = ("supplier", "contact", "special_instructions")
+        widgets = {"special_instructions": forms.Textarea(attrs={"rows": 6})}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        suppliers = FulfilmentSupplier.objects.filter(
+            active=True, supports_blind_shipping=True
+        )
+        self.fields["supplier"].queryset = suppliers
+        self.fields["contact"].queryset = FulfilmentContact.objects.filter(
+            active=True, supplier__in=suppliers
+        )
+        for field in self.fields.values():
+            field.widget.attrs["class"] = "form-control"
+
+    def clean(self):
+        cleaned_data = super().clean()
+        supplier = cleaned_data.get("supplier")
+        contact = cleaned_data.get("contact")
+        if supplier and not supplier.supports_blind_shipping:
+            self.add_error("supplier", "This supplier is not approved for blind shipping.")
+        if contact and supplier and contact.supplier_id != supplier.id:
+            self.add_error("contact", "Choose a contact belonging to the selected supplier.")
+        return cleaned_data

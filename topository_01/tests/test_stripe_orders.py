@@ -180,8 +180,10 @@ class FulfilmentDashboardTests(TestCase):
         self.client.force_login(self.staff)
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Print-on-demand fulfilment")
         self.assertContains(response, "Garment Printing Group")
-        self.assertContains(response, "No Garment Printing Group recipient has been configured")
+        self.assertContains(response, "Alastair")
+        self.assertContains(response, "Steve Shaw")
 
     def test_order_detail_links_to_the_fulfilment_request(self):
         self.client.force_login(self.staff)

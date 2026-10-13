@@ -132,7 +132,6 @@ MEDIA_ROOT = BASE_DIR / "media"
 PRIVATE_DESIGN_ARTWORK_ROOT = Path(
     os.environ.get("PRIVATE_DESIGN_ARTWORK_ROOT", BASE_DIR / "private_design_artwork")
 )
-FULFILMENT_RECIPIENT = os.environ.get("FULFILMENT_RECIPIENT", "")
 FULFILMENT_FROM_EMAIL = os.environ.get(
     "FULFILMENT_FROM_EMAIL", "info@tshirts.topository.org"
 )

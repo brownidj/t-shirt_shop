@@ -4,6 +4,9 @@ from pathlib import Path
 
 from django.conf import settings
 from django.core.mail import EmailMessage
+from django.utils import timezone
+
+from .models import FulfilmentRequest
 
 
 def _product_attributes(product):
@@ -51,16 +54,18 @@ def fulfilment_lines(order):
     return lines
 
 
-def build_fulfilment_email(order):
+def build_fulfilment_email(request):
     """Build the internal-only request to Garment Printing Group.
 
-    The caller must check both the configured recipient and artwork before
+    The caller must check both the selected contact and artwork before
     sending.  No shopper email address, shop retail price, or supplier price is
     included in the message.
     """
-    recipient = settings.FULFILMENT_RECIPIENT.strip()
-    if not recipient:
-        raise ValueError("FULFILMENT_RECIPIENT has not been configured")
+    order = request.order
+    if request.supplier is None or not request.supplier.supports_blind_shipping:
+        raise ValueError("Choose an active supplier approved for blind shipping")
+    if request.contact is None or request.contact.supplier_id != request.supplier_id:
+        raise ValueError("Choose a named contact for the selected supplier")
 
     lines = fulfilment_lines(order)
     missing_artwork = [line["title"] for line in lines if line["artwork"] is None]
@@ -97,25 +102,47 @@ def build_fulfilment_email(order):
         [
             f"Fulfilment request for Topository order {order.number}",
             "",
-            "Please send a finished T-shirt design preview to Topository for approval before production.",
-            "",
             "Items to produce:",
             *item_lines,
             "",
-            "Delivery instruction: send the finished product by normal delivery to the shopper:",
+            "Delivery address:",
             destination,
             "",
-            "Invoice instruction: send the invoice to Topository at info@tshirts.topository.org only.",
-            "Do not include Garment Printing Group pricing, invoice details, or supplier correspondence in any shopper communication or delivery.",
+            "Instructions:",
+            request.special_instructions,
         ]
     )
     email = EmailMessage(
         subject=f"Topository fulfilment request — order {order.number}",
         body=body,
         from_email=settings.FULFILMENT_FROM_EMAIL,
-        to=[recipient],
+        to=[request.contact.email],
         reply_to=["info@tshirts.topository.org"],
     )
     for line in lines:
         email.attach_file(line["artwork"])
     return email
+
+
+def ensure_fulfilment_request(order):
+    """Create the supplier-neutral internal request for a paid order."""
+    from .models import FulfilmentContact, FulfilmentSupplier
+
+    supplier = FulfilmentSupplier.objects.filter(
+        active=True, supports_blind_shipping=True
+    ).order_by("name").first()
+    contact = None
+    if supplier:
+        contact = FulfilmentContact.objects.filter(
+            supplier=supplier, active=True
+        ).order_by("-is_default", "name").first()
+    request, _ = FulfilmentRequest.objects.get_or_create(
+        order=order, defaults={"supplier": supplier, "contact": contact}
+    )
+    return request
+
+
+def mark_request_sent(request):
+    request.status = FulfilmentRequest.STATUS_REQUEST_SENT
+    request.request_sent_at = timezone.now()
+    request.save(update_fields=("status", "request_sent_at", "updated_at"))
