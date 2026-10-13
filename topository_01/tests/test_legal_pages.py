@@ -20,3 +20,9 @@ class LegalFlatPageTests(TestCase):
 
         self.assertContains(response, 'href="/returns-refunds-cancellations/"')
         self.assertContains(response, 'href="/privacy-policy/"')
+
+    def test_returns_page_uses_the_short_title_in_its_breadcrumb(self):
+        response = self.client.get("/returns-refunds-cancellations/")
+
+        self.assertContains(response, "Returns &amp; Refunds")
+        self.assertNotContains(response, "Returns, Refunds and Cancellations Policy")

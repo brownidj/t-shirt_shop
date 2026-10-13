@@ -58,7 +58,7 @@ def create_legal_pages(apps, schema_editor):
     )
     pages = (
         ("/terms-of-sale/", "Terms of Sale", TERMS_OF_SALE),
-        ("/returns-refunds-cancellations/", "Returns, Refunds and Cancellations Policy", RETURNS_POLICY),
+        ("/returns-refunds-cancellations/", "Returns & Refunds", RETURNS_POLICY),
         ("/privacy-policy/", "Privacy Policy", PRIVACY_POLICY),
     )
     for url, title, content in pages:
