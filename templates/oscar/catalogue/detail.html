@@ -21,50 +21,11 @@
                 <span class="breadcrumb-path__separator" aria-hidden="true">/</span>
                 <span aria-current="page">{{ product.get_title }}</span>
             </li>
-            {% if product.product_class.name == "Designs" and product.description %}
-                <li id="product-description-information" class="product-description-information">
-                    <button id="product-description-information-trigger" type="button"
-                            class="product-description-information__trigger" aria-expanded="false"
-                            aria-controls="product-description-information-content"
-                            aria-label="{% blocktrans with product_title=product.get_title %}Read the description for {{ product_title }}{% endblocktrans %}">
-                        <i class="fas fa-info-circle" aria-hidden="true"></i>
-                    </button>
-                    <div id="product-description-information-content" class="product-description-information__content"
-                         role="dialog" aria-label="{% trans 'Product description' %}">
-                        {{ product.description|striptags }}
-                    </div>
-                </li>
-            {% endif %}
             {% if product.product_class.name == "Designs" %}
-                <li id="variant-status" class="d-flex align-items-center text-muted" aria-live="polite"></li>
+                <li id="variant-status" class="ml-auto d-flex align-items-center text-muted" aria-live="polite"></li>
             {% endif %}
         </ol>
     </nav>
-    {% if product.product_class.name == "Designs" and product.description %}
-        <script>
-            document.addEventListener("DOMContentLoaded", function () {
-                var information = document.getElementById("product-description-information");
-                var trigger = document.getElementById("product-description-information-trigger");
-                if (!information || !trigger) return;
-
-                function closeInformation() {
-                    information.classList.remove("is-open");
-                    trigger.setAttribute("aria-expanded", "false");
-                }
-
-                trigger.addEventListener("click", function () {
-                    var isOpen = information.classList.toggle("is-open");
-                    trigger.setAttribute("aria-expanded", String(isOpen));
-                });
-                document.addEventListener("click", function (event) {
-                    if (!information.contains(event.target)) closeInformation();
-                });
-                document.addEventListener("keydown", function (event) {
-                    if (event.key === "Escape") closeInformation();
-                });
-            });
-        </script>
-    {% endif %}
 {% endblock breadcrumbs %}
 
 {% block extrastyles %}
@@ -86,9 +47,12 @@
         .breadcrumb-path__separator { padding: 0 .5rem; color: #6c757d; }
         #variant-status { margin: 0 6px; font-size: 1rem; line-height: 1; text-align: right; white-space: nowrap; }
         #variant-status::before { display: none; }
-        .product-description-information {
-            position: relative;
-            margin-left: auto;
+        #variant-panel { position: relative; }
+        #variant-panel .product-description-information {
+            position: absolute;
+            z-index: 2;
+            top: .5rem;
+            right: .5rem;
         }
         .product-description-information::before { display: none; }
         .product-description-information__trigger {
@@ -134,7 +98,10 @@
                 white-space: nowrap;
             }
             .product-breadcrumb #variant-status {
-                margin: 0 0 0 .5rem;
+                flex: 0 0 100%;
+                max-width: 100%;
+                margin: .35rem 0 0 !important;
+                text-align: left;
             }
         }
         .variant-panel-preview {
@@ -379,6 +346,20 @@
             {# Variant details panel lives under the design image #}
             {% if product.product_class.name == "Designs" %}
                 <div id="variant-panel" class="card mt-3 d-none">
+                    {% if product.description %}
+                        <div id="product-description-information" class="product-description-information">
+                            <button id="product-description-information-trigger" type="button"
+                                    class="product-description-information__trigger" aria-expanded="false"
+                                    aria-controls="product-description-information-content"
+                                    aria-label="{% blocktrans with product_title=product.get_title %}Read the description for {{ product_title }}{% endblocktrans %}">
+                                <i class="fas fa-info-circle" aria-hidden="true"></i>
+                            </button>
+                            <div id="product-description-information-content" class="product-description-information__content"
+                                 role="dialog" aria-label="{% trans 'Product description' %}">
+                                {{ product.description|striptags }}
+                            </div>
+                        </div>
+                    {% endif %}
                     <div class="card-body">
                         <div class="variant-panel-preview">
                             <img id="variant-panel-image" class="img-fluid" alt="">
@@ -521,6 +502,8 @@
                             var styleInformation = document.getElementById("style-information");
                             var styleInformationTrigger = document.getElementById("style-information-trigger");
                             var styleInformationContent = document.getElementById("style-information-content");
+                            var productDescriptionInformation = document.getElementById("product-description-information");
+                            var productDescriptionInformationTrigger = document.getElementById("product-description-information-trigger");
 
                             var panel       = document.getElementById("variant-panel");
                             var panelImg    = document.getElementById("variant-panel-image");
@@ -598,6 +581,27 @@
                                 });
                                 document.addEventListener("keydown", function (event) {
                                     if (event.key === "Escape") closeStyleInformation();
+                                });
+                            }
+
+                            function closeProductDescriptionInformation() {
+                                if (!productDescriptionInformation || !productDescriptionInformationTrigger) return;
+                                productDescriptionInformation.classList.remove("is-open");
+                                productDescriptionInformationTrigger.setAttribute("aria-expanded", "false");
+                            }
+
+                            if (productDescriptionInformationTrigger) {
+                                productDescriptionInformationTrigger.addEventListener("click", function () {
+                                    var isOpen = productDescriptionInformation.classList.toggle("is-open");
+                                    productDescriptionInformationTrigger.setAttribute("aria-expanded", String(isOpen));
+                                });
+                                document.addEventListener("click", function (event) {
+                                    if (productDescriptionInformation && !productDescriptionInformation.contains(event.target)) {
+                                        closeProductDescriptionInformation();
+                                    }
+                                });
+                                document.addEventListener("keydown", function (event) {
+                                    if (event.key === "Escape") closeProductDescriptionInformation();
                                 });
                             }
 
