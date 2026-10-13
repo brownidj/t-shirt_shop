@@ -1,0 +1,10 @@
+{% extends "topository/dashboard/orders/order_detail_base.html" %}
+
+{% block additional_order_information %}
+    {{ block.super }}
+    <div class="mb-4">
+        <a class="btn btn-primary" href="{% url 'fulfilment_order' number=order.number %}">
+            Fulfilment request
+        </a>
+    </div>
+{% endblock %}

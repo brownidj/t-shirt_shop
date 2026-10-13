@@ -167,8 +167,8 @@ class FulfilmentDashboardTests(TestCase):
         self.order = _create_order_from_stripe_session(
             StripeOrderCreationTests.session_for(self, create_basket())
         )
-        self.staff = get_user_model().objects.create_user(
-            username="staff", password="safe-test-password", is_staff=True
+        self.staff = get_user_model().objects.create_superuser(
+            username="staff", email="staff@example.test", password="safe-test-password"
         )
 
     def test_fulfilment_draft_is_staff_only_and_never_shopper_facing(self):
@@ -182,3 +182,16 @@ class FulfilmentDashboardTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Garment Printing Group")
         self.assertContains(response, "No Garment Printing Group recipient has been configured")
+
+    def test_order_detail_links_to_the_fulfilment_request(self):
+        self.client.force_login(self.staff)
+
+        response = self.client.get(
+            reverse("dashboard:order-detail", kwargs={"number": self.order.number})
+        )
+
+        self.assertContains(response, "Fulfilment request")
+        self.assertContains(
+            response,
+            reverse("fulfilment_order", kwargs={"number": self.order.number}),
+        )
