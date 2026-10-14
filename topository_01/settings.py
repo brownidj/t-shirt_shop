@@ -116,7 +116,15 @@ TEMPLATES = [{
 
 WSGI_APPLICATION = "topository_01.wsgi.application"
 
-DATABASES = {"default": {"ENGINE": "django.db.backends.sqlite3", "NAME": BASE_DIR / "db.sqlite3"}}
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        # CI uses an isolated, freshly migrated database.  Developers and the
+        # deployed site continue to use the normal project database unless an
+        # explicit path is supplied.
+        "NAME": os.environ.get("TOPOSITORY_DB_PATH", BASE_DIR / "db.sqlite3"),
+    }
+}
 
 STATIC_URL = "/static/"
 STATICFILES_DIRS = [

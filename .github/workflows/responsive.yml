@@ -12,6 +12,8 @@ jobs:
     name: Responsive browser checks
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      TOPOSITORY_DB_PATH: ${{ github.workspace }}/.responsive-checks.sqlite3
 
     steps:
       - name: Check out the site

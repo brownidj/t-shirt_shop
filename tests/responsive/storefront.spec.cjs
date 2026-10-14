@@ -21,14 +21,11 @@ async function expectNoHorizontalOverflow(page) {
 }
 
 async function visitDescribedDesign(page) {
-  await page.goto("/catalogue/", { waitUntil: "domcontentloaded" });
-  const designLink = page.locator('a[href*="/catalogue/cambroernid-02_"]').first();
-  await expect(designLink).toBeVisible();
-  const href = await designLink.getAttribute("href");
-  if (!href) {
-    throw new Error("Cambroernid 02 catalogue link has no destination");
+  const path = process.env.RESPONSIVE_DESIGN_PATH;
+  if (!path || !path.startsWith("/catalogue/responsive-cambroernid_")) {
+    throw new Error("Responsive test design was not created by global setup");
   }
-  await page.goto(href, { waitUntil: "domcontentloaded" });
+  await page.goto(path, { waitUntil: "domcontentloaded" });
 }
 
 for (const [name, path] of pages) {
