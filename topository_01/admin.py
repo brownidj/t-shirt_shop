@@ -35,7 +35,7 @@ class FulfilmentContactInline(admin.TabularInline):
 @admin.register(FulfilmentSupplier)
 class FulfilmentSupplierAdmin(admin.ModelAdmin):
     list_display = (
-        "name", "sales_email", "phone_number", "supports_blind_shipping",
+        "name", "partner", "sales_email", "phone_number", "supports_blind_shipping",
         "proof_required", "active",
     )
     list_filter = ("supports_blind_shipping", "proof_required", "active")

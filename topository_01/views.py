@@ -47,6 +47,7 @@ from .forms import (
     FulfilmentRequestForm,
     UsernameOrEmailAuthenticationForm,
 )
+from .models import FulfilmentSupplier
 from .strategy import Selector
 from .fulfilment import (
     build_fulfilment_email,
@@ -997,7 +998,20 @@ def add_configured_tshirt(request, product_id, *, save_to_wishlist=False):
         # for checkout.  A null quantity denotes print-on-demand stock; the
         # custom Oscar strategy marks this fulfilment partner as always
         # available rather than decrementing an invented inventory count.
-        partner, _ = Partner.objects.get_or_create(name="Topository Fulfilment")
+        supplier, _ = FulfilmentSupplier.objects.get_or_create(
+            name="Garment Printing Group",
+            defaults={
+                "supports_blind_shipping": True,
+                "proof_required": True,
+                "active": True,
+            },
+        )
+        if supplier.partner is None:
+            partner, _ = Partner.objects.get_or_create(name=supplier.name)
+            supplier.partner = partner
+            supplier.save(update_fields=["partner"])
+        else:
+            partner = supplier.partner
         StockRecord.objects.update_or_create(
             product=child,
             partner=partner,

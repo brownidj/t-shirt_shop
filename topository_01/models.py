@@ -31,6 +31,13 @@ class FulfilmentSupplier(models.Model):
     """A POD supplier eligible to receive private fulfilment requests."""
 
     name = models.CharField(max_length=200, unique=True)
+    partner = models.OneToOneField(
+        "partner.Partner",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="fulfilment_supplier",
+    )
     supports_blind_shipping = models.BooleanField(default=False)
     active = models.BooleanField(default=True)
     proof_required = models.BooleanField(default=True)

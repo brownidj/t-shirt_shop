@@ -13,6 +13,7 @@ from topository_01.views import (
     _stripe_customer_for_user,
     stripe_checkout,
 )
+from topository_01.models import FulfilmentSupplier
 
 
 Country = get_model("address", "Country")
@@ -20,7 +21,10 @@ Country = get_model("address", "Country")
 
 class StripeOrderCreationTests(TestCase):
     def setUp(self):
-        Country.objects.create(iso_3166_1_a2="AU", printable_name="Australia")
+        Country.objects.get_or_create(
+            iso_3166_1_a2="AU",
+            defaults={"printable_name": "Australia", "name": "Australia"},
+        )
 
     def session_for(self, basket, user=None):
         return SimpleNamespace(
@@ -101,8 +105,9 @@ class StripeOrderCreationTests(TestCase):
 
 class StripeCustomerTests(TestCase):
     def setUp(self):
-        self.country = Country.objects.create(
-            iso_3166_1_a2="AU", printable_name="Australia"
+        self.country, _ = Country.objects.get_or_create(
+            iso_3166_1_a2="AU",
+            defaults={"printable_name": "Australia", "name": "Australia"},
         )
         self.user = get_user_model().objects.create_user(
             username="shopper", email="shopper@example.test", password="safe-test-password"
@@ -163,7 +168,10 @@ class StripeCheckoutPolicyTests(TestCase):
 
 class FulfilmentDashboardTests(TestCase):
     def setUp(self):
-        Country.objects.create(iso_3166_1_a2="AU", printable_name="Australia")
+        Country.objects.get_or_create(
+            iso_3166_1_a2="AU",
+            defaults={"printable_name": "Australia", "name": "Australia"},
+        )
         self.order = _create_order_from_stripe_session(
             StripeOrderCreationTests.session_for(self, create_basket())
         )
@@ -184,6 +192,16 @@ class FulfilmentDashboardTests(TestCase):
         self.assertContains(response, "Garment Printing Group")
         self.assertContains(response, "Alastair")
         self.assertContains(response, "Steve Shaw")
+
+    def test_gpg_supplier_is_linked_to_the_fulfilment_partner(self):
+        supplier = FulfilmentSupplier.objects.get(name="Garment Printing Group")
+
+        self.assertEqual(supplier.partner.name, "Garment Printing Group")
+        self.assertTrue(
+            supplier.partner.addresses.filter(
+                line1="2/7 Anella Avenue", postcode="2154"
+            ).exists()
+        )
 
     def test_order_detail_links_to_the_fulfilment_request(self):
         self.client.force_login(self.staff)
