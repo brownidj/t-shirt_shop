@@ -81,7 +81,7 @@ DEFAULT_FULFILMENT_INSTRUCTIONS = """Please send a finished T-shirt design previ
 
 Send the finished product by normal delivery directly to the shopper's address below.
 
-Send the invoice to Topository at info@tshirts.topository.org only. Do not include supplier pricing, invoice details, or supplier correspondence in any shopper communication or delivery."""
+Send the invoice to Topository at admin@topository.org only. Do not include supplier pricing, invoice details, or supplier correspondence in any shopper communication or delivery."""
 
 
 class FulfilmentRequest(models.Model):

@@ -9,10 +9,19 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 DEBUG = os.environ.get("DJANGO_DEBUG", "True").lower() == "true"
 
 # During local development, show transactional emails in the runserver console
-# instead of trying to contact a local SMTP server.  Production continues to
-# use Django's SMTP backend and must be configured with a real mail provider.
+# instead of trying to contact a local SMTP server.  Production uses the
+# authenticated Spacemail SMTP service.  Its password is supplied only via the
+# host environment, never source control.
 if DEBUG:
     EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+else:
+    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+    EMAIL_HOST = os.environ.get("EMAIL_HOST", "mail.spacemail.com")
+    EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "465"))
+    EMAIL_USE_SSL = os.environ.get("EMAIL_USE_SSL", "true").lower() == "true"
+    EMAIL_USE_TLS = False
+    EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "admin@topository.org")
+    EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
 
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "")
 if not SECRET_KEY:
@@ -141,7 +150,10 @@ PRIVATE_DESIGN_ARTWORK_ROOT = Path(
     os.environ.get("PRIVATE_DESIGN_ARTWORK_ROOT", BASE_DIR / "private_design_artwork")
 )
 FULFILMENT_FROM_EMAIL = os.environ.get(
-    "FULFILMENT_FROM_EMAIL", "info@tshirts.topository.org"
+    "FULFILMENT_FROM_EMAIL", "admin@topository.org"
+)
+FULFILMENT_REPLY_TO_EMAIL = os.environ.get(
+    "FULFILMENT_REPLY_TO_EMAIL", FULFILMENT_FROM_EMAIL
 )
 
 # Rendered shirt previews are costly image composites.  The cache key in the

@@ -117,7 +117,7 @@ def build_fulfilment_email(request):
         body=body,
         from_email=settings.FULFILMENT_FROM_EMAIL,
         to=[request.contact.email],
-        reply_to=["info@tshirts.topository.org"],
+        reply_to=[settings.FULFILMENT_REPLY_TO_EMAIL],
     )
     for line in lines:
         email.attach_file(line["artwork"])
