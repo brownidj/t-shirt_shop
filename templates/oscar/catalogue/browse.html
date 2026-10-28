@@ -49,37 +49,40 @@
             font-size: calc(1rem + 4pt);
         }
 
-        .catalogue-product-grid > [class*="col-"] {
-            padding-right: 10px;
-            padding-left: 10px;
+        /* Let the available content width determine the number of cards. */
+        .catalogue-product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+            gap: .75rem 1.25rem;
+            margin: 0;
         }
 
-        /* Oscar reserves 380px for every product card.  Our compact cards
-           need only the room their actual title, image, description and price use. */
+        .catalogue-product-grid > li { min-width: 0; }
+
         .catalogue-product-grid .product_pod {
             height: auto;
             min-height: 0;
             margin: .35rem 0 .75rem;
         }
 
+        .catalogue-product-grid .product-card-content {
+            display: block !important;
+            width: 100%;
+        }
+
+        .catalogue-product-grid .image_container { height: auto; }
+        .catalogue-product-grid .image_container img { max-width: 100%; }
+
         @media (min-width: 768px) {
             .page .page_inner > .row > .sidebar {
-                flex: 0 0 33.333333%;
-                max-width: 33.333333%;
+                flex: 0 0 13rem;
+                max-width: 13rem;
             }
 
             .page .page_inner > .row > .sidebar + div {
-                flex: 0 0 66.666667%;
-                max-width: 66.666667%;
-            }
-
-            .sidebar .side_categories {
-                width: max-content;
-                max-width: none;
-            }
-
-            .sidebar .side_categories .nav-list {
-                white-space: nowrap;
+                flex: 1 1 0;
+                min-width: 0;
+                max-width: calc(100% - 13rem);
             }
         }
 
@@ -154,10 +157,10 @@
     {% if products %}
         <section>
             <div>
-                <ol class="catalogue-product-grid row list-unstyled pl-0">
+                <ol class="catalogue-product-grid list-unstyled pl-0">
                     {% block products %}
                       {% for product in products %}
-                          <li class="col-sm-6 col-md-6 col-lg-4">{% render_product product.object %}</li>
+                          <li>{% render_product product.object %}</li>
                       {% endfor %}
                     {% endblock %}
                 </ol>

@@ -115,6 +115,24 @@ class CatalogueCategoryIntegrationTests(TestCase):
             self.assertContains(response, self.tully.get_absolute_url())
             self.assertContains(response, thumbnail.url)
 
+    def test_deleted_index_entry_does_not_consume_a_page_slot(self):
+        # Simulate a stale search hit left behind after a design was removed.
+        product = self.create_design("A deleted design", self.paleo)
+        backend = connections["default"].get_backend()
+        index = connections["default"].get_unified_index().get_index(Product)
+        backend.update(index, [product])
+        stale_pk = product.pk
+        with patch.object(backend, "remove"):
+            product.delete()
+        from oscar.apps.search.facets import base_sqs
+        self.assertEqual(base_sqs().filter(django_id=stale_pk).count(), 1)
+
+        responses = [self.client.get(self.paleo.get_absolute_url(), {"page": p}) for p in (1, 2)]
+        self.assertEqual(len(responses[0].context["page_obj"]), settings.OSCAR_PRODUCTS_PER_PAGE)
+        ids = [hit.object.pk for response in responses for hit in response.context["page_obj"]]
+        self.assertEqual(ids, [p.pk for p in self.paleo_only] + [self.tully.pk])
+        self.assertEqual(responses[0].context["paginator"].count, len(ids))
+
     def test_shared_designs_appear_in_both_slideshow_sections(self):
         shared_designs = [self.tully]
         for title in ["Burgess Shale", "Dunkleosteus", "Yunnanzoon"]:
