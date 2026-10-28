@@ -115,6 +115,16 @@ class CatalogueCategoryIntegrationTests(TestCase):
             self.assertContains(response, self.tully.get_absolute_url())
             self.assertContains(response, thumbnail.url)
 
+    def test_viewport_page_size_is_bounded_and_preserved_in_links(self):
+        for value, expected in [("3", 3), ("1", 1), ("999", 48), ("0", 1), ("invalid", settings.OSCAR_PRODUCTS_PER_PAGE)]:
+            with self.subTest(value=value):
+                response = self.client.get(self.paleo.get_absolute_url(), {"per_page": value})
+                self.assertEqual(response.status_code, 200)
+                self.assertEqual(response.context["paginator"].per_page, expected)
+        response = self.client.get(self.paleo.get_absolute_url(), {"per_page": 3, "page": 2})
+        self.assertContains(response, "per_page=3")
+        self.assertEqual([hit.object.pk for hit in response.context["page_obj"]], [p.pk for p in self.paleo_only[3:6]])
+
     def test_deleted_index_entry_does_not_consume_a_page_slot(self):
         # Simulate a stale search hit left behind after a design was removed.
         product = self.create_design("A deleted design", self.paleo)

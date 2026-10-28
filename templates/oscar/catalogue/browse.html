@@ -4,6 +4,9 @@
 {% load category_tags %}
 {% load product_tags %}
 {% load i18n %}
+{% load static %}
+
+{% block body_class %}{{ block.super }} catalogue-fit{% endblock %}
 
 {% block title %}
     {% if not category and not search_form.q.value %}
@@ -52,7 +55,7 @@
         /* Let the available content width determine the number of cards. */
         .catalogue-product-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(min(100%, 13rem), 1fr));
             gap: .75rem 1.25rem;
             margin: 0;
         }
@@ -96,6 +99,58 @@
             padding-top: 1rem;
         }
 
+        .catalogue-category-select { display: none; }
+        .catalogue-fit .page .page_inner { padding: 1rem; }
+        .catalogue-fit .breadcrumb { padding: .5rem .75rem; margin-bottom: .5rem; }
+        .catalogue-fit .catalogue-results-header { margin-bottom: .5rem; padding-bottom: 0; }
+        .catalogue-fit footer { margin-top: .5rem !important; padding-top: .5rem !important; padding-bottom: .5rem !important; }
+        .catalogue-fit .catalogue-pagination-bottom { margin-top: .5rem !important; }
+        .catalogue-fit-ready .catalogue-product-grid { grid-auto-rows: var(--catalogue-row-height); gap: 12px 20px; }
+        .catalogue-fit-ready .catalogue-product-grid .product_pod { margin: 0; }
+        .catalogue-fit-ready .product-card-title {
+            height: 2.5rem;
+            line-height: 1.25rem;
+        }
+        .catalogue-fit-ready .product-card-title > a {
+            display: -webkit-inline-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            max-width: calc(100% - 2rem);
+            overflow: hidden;
+            vertical-align: top;
+        }
+        .catalogue-fit-ready .catalogue-product-grid .image_container { height: var(--catalogue-image-height); }
+        .catalogue-fit-ready .catalogue-product-grid .image_container img {
+            max-height: var(--catalogue-image-height);
+            object-fit: contain;
+        }
+        .catalogue-fit-ready .product-description {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            line-height: 1.35;
+            margin-bottom: 0;
+        }
+        .catalogue-fit-ready .product_price .price { margin-bottom: 0; }
+        @media (max-width: 767px), (max-height: 520px) {
+            .catalogue-fit .header .h1 { flex-direction: row; flex-wrap: nowrap; justify-content: center; }
+            .catalogue-fit .header .h1 > a { flex: 0 0 9rem; width: 9rem; transform: none; }
+            .catalogue-fit .header .brand-product-type { font-size: 1.75rem; margin-left: 0; }
+            .catalogue-fit .header .h1 > small { display: none; }
+            .catalogue-fit .header .page_inner { padding-bottom: .5rem; }
+            .catalogue-fit .sidebar, .catalogue-fit .sidebar + div { flex: 0 0 100%; max-width: 100%; }
+            .catalogue-fit .sidebar .side_categories { display: none; }
+            .catalogue-category-select { display: flex; align-items: center; gap: .5rem; margin-bottom: .5rem; }
+            .catalogue-category-select label { margin: 0; }
+            .catalogue-category-select select { flex: 1; }
+        }
+        @media (max-height: 520px) {
+            .catalogue-fit .header .page_inner, .catalogue-fit .breadcrumb { display: none; }
+            .catalogue-fit .product-description { display: none; }
+            .catalogue-fit-ready .product-card-title { height: 1.5rem; }
+            .catalogue-fit-ready .product-card-title > a { -webkit-line-clamp: 1; }
+        }
     </style>
 {% endblock %}
 
@@ -111,6 +166,16 @@
 {% block column_left %}
     {% category_tree as tree_categories %}
     {% if tree_categories %}
+        <div class="catalogue-category-select">
+            <label for="catalogue-category">{% trans "Category" %}</label>
+            <select id="catalogue-category" class="form-control">
+                <option value="{% url 'catalogue:index' %}" {% if not category %}selected{% endif %}>{% trans "All" %}</option>
+                {% for tree_category in tree_categories %}
+                    <option value="{{ tree_category.url }}" {% if tree_category.pk == category.pk %}selected{% endif %}>{{ tree_category.name }}</option>
+                {% endfor %}
+                <option value="{% url 'request_design' %}">{% trans "Request a design" %}</option>
+            </select>
+        </div>
         <div class="side_categories card card-body bg-light">
             <h4>{% trans "Choose category" %}</h4>
             <ul class="nav nav-list flex-column">
@@ -157,7 +222,7 @@
     {% if products %}
         <section>
             <div>
-                <ol class="catalogue-product-grid list-unstyled pl-0">
+                <ol class="catalogue-product-grid list-unstyled pl-0" data-page-size="{{ paginator.per_page }}" data-page="{{ page_obj.number }}" data-total="{{ paginator.count }}">
                     {% block products %}
                       {% for product in products %}
                           <li>{% render_product product.object %}</li>
@@ -174,6 +239,11 @@
     {% endif %}
 
 {% endblock content %}
+
+{% block extrascripts %}
+    {{ block.super }}
+    <script src="{% static 'topository/catalogue-fit.js' %}"></script>
+{% endblock %}
 
 {% block onbodyload %}
     {{ block.super }}
