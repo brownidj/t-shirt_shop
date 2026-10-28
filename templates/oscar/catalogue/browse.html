@@ -147,7 +147,7 @@
         }
         @media (max-height: 520px) {
             .catalogue-fit .header .page_inner, .catalogue-fit .breadcrumb { display: none; }
-            .catalogue-fit .product-description { display: none; }
+            .catalogue-fit-ready .product-description { display: none; }
             .catalogue-fit-ready .product-card-title { height: 1.5rem; }
             .catalogue-fit-ready .product-card-title > a { -webkit-line-clamp: 1; }
         }
@@ -242,7 +242,7 @@
 
 {% block extrascripts %}
     {{ block.super }}
-    <script src="{% static 'topository/catalogue-fit.js' %}"></script>
+    <script src="{% static 'topository/catalogue-fit.js' %}?v=2"></script>
 {% endblock %}
 
 {% block onbodyload %}
