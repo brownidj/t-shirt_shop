@@ -173,7 +173,7 @@ CACHES = {
 HAYSTACK_CONNECTIONS = {
     'default': {
         'ENGINE': 'topository_01.search.backends.OffsetWhooshEngine',
-        'PATH': BASE_DIR / 'whoosh_index',
+        'PATH': Path(os.environ.get('TOPOSITORY_SEARCH_INDEX_PATH', BASE_DIR / 'whoosh_index')),
     },
 }
 

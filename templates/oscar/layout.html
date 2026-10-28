@@ -1,0 +1,18 @@
+{% extends "oscar/layout.html" %}
+{% load static %}
+
+{% block styles %}
+    {{ block.super }}
+    <link rel="stylesheet" href="{% static 'topository/accessibility.css' %}">
+{% endblock %}
+
+{% block layout %}
+    <a class="sr-only sr-only-focusable" href="#main-content">Skip to main content</a>
+    {{ block.super }}
+{% endblock %}
+
+{% block content_wrapper %}
+    <main id="main-content" tabindex="-1">
+        {{ block.super }}
+    </main>
+{% endblock %}

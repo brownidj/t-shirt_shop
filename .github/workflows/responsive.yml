@@ -1,4 +1,4 @@
-name: Responsive checks
+name: Responsive and accessibility checks
 
 on:
   push:
@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   responsive:
-    name: Responsive browser checks
+    name: Responsive and accessibility checks
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
@@ -43,5 +43,16 @@ jobs:
       - name: Install test browsers
         run: npx playwright install --with-deps chromium webkit
 
-      - name: Check responsive layouts
+      - name: Check responsive layouts and accessibility
         run: npm run test:responsive:ci
+
+      - name: Save browser and accessibility reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-test-reports
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14
+          if-no-files-found: ignore

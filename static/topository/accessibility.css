@@ -1,0 +1,15 @@
+/* Keep Bootstrap's palette readable on both white and light-grey shop panels. */
+a { color: #0056b3; }
+a:hover, a:focus { color: #003d80; }
+p a:not(.btn) { text-decoration: underline; }
+.btn-primary { background-color: #0062cc; border-color: #0062cc; }
+.btn-primary:hover, .btn-primary:focus { background-color: #0056b3; border-color: #0056b3; }
+.text-muted { color: #59636d !important; }
+.breadcrumb-item.active { color: #59636d; }
+.btn-outline-primary { color: #0056b3; border-color: #0056b3; }
+.btn-outline-primary:hover, .btn-outline-primary:focus { color: #fff; background-color: #0056b3; }
+.btn-outline-secondary { color: #59636d; border-color: #59636d; }
+.btn-outline-secondary:hover, .btn-outline-secondary:focus { color: #fff; background-color: #59636d; }
+.btn-outline-danger { color: #b21f2d; border-color: #b21f2d; }
+.btn-outline-danger:hover, .btn-outline-danger:focus { color: #fff; background-color: #b21f2d; }
+.price_color, .basket_summary .basket-items .price_color { color: #006b00; }

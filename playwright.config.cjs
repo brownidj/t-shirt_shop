@@ -2,6 +2,10 @@ const { defineConfig } = require("@playwright/test");
 
 const baseURL = process.env.BASE_URL || "http://127.0.0.1:8000";
 const usesExternalServer = Boolean(process.env.BASE_URL);
+// Browser fixtures must never write into the developer's normal catalogue index.
+if (!usesExternalServer) {
+  process.env.TOPOSITORY_SEARCH_INDEX_PATH ||= require("node:path").join(__dirname, "tmp", "responsive-search-index");
+}
 
 module.exports = defineConfig({
   testDir: "./tests/responsive",

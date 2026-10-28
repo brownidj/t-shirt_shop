@@ -62,6 +62,7 @@
                         <div class="col-md-3">
                             <div class="checkout-quantity">
                                 <div class="input-group {% if form.errors %}error{% endif %}">
+                                    <label class="sr-only" for="{{ form.quantity.id_for_label }}">{% trans "Quantity" %}: {{ line.description }}</label>
                                     {% render_field form.quantity class+="form-control" %}
                                     <div class="input-group-append">
                                         <button class="btn btn-secondary" type="submit" data-loading-text="{% trans 'Updating...' %}">{% trans "Update" %}</button>

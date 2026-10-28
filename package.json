@@ -6,9 +6,11 @@
     "test:responsive:ci": "RESPONSIVE_NO_SNAPSHOTS=1 playwright test",
     "test:responsive:update": "playwright test --update-snapshots",
     "test:responsive:ui": "playwright test --ui",
-    "test:responsive:live": "LIVE_SMOKE=1 BASE_URL=https://tshirts.topository.org playwright test"
+    "test:responsive:live": "LIVE_SMOKE=1 BASE_URL=https://tshirts.topository.org playwright test",
+    "test:accessibility": "playwright test accessibility.spec.cjs"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.14.0",
     "@playwright/test": "1.64.0"
   }
 }
