@@ -13,6 +13,7 @@ home_dir="${HOME_DIR:-/home/qtjifjjliu}"
 live_dir="${LIVE_DIR:-${home_dir}/django_shop}"
 release_dir="${RELEASE_DIR:-${home_dir}/releases/t-shirt_shop}"
 venv_dir="${VENV_DIR:-${home_dir}/virtualenv/django_shop/3.13}"
+public_static_dir="${PUBLIC_STATIC_DIR:-${home_dir}/tshirts.topository.org/static}"
 
 if [[ ! -d "${live_dir}" ]]; then
     echo "Live application directory does not exist: ${live_dir}" >&2
@@ -54,6 +55,11 @@ if [[ "${RUN_MIGRATIONS:-0}" == "1" ]]; then
 fi
 
 "${venv_dir}/bin/python" "${live_dir}/manage.py" collectstatic --noinput
+# Apache serves a separate static mirror at the domain document root.
+# Copy collected assets without deleting host-managed files.
+if [[ -d "${public_static_dir}" ]]; then
+    rsync -a "${live_dir}/staticfiles/" "${public_static_dir}/"
+fi
 touch "${live_dir}/tmp/restart.txt"
 
 echo "Deployment complete: $(git -C "${release_dir}" rev-parse --short HEAD)"
